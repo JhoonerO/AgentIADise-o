@@ -521,25 +521,27 @@ export default function AIAssistant() {
 
         {/* Voice Visualization */}
         {isListening && (
-          <div className={`px-3 md:px-4 py-3 border-y ${
+          <div className={`px-3 md:px-4 py-4 border-y ${
             isDark ? 'bg-black border-neutral-800' : 'bg-purple-50 border-purple-200'
           }`}>
             <div className="max-w-4xl mx-auto">
-              <div className="flex items-center justify-center space-x-2">
-                <ElegantCircle size="w-8 h-8 md:w-10 md:h-10" className="shrink-0" />
-                <div className="text-sm font-medium bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mr-4">
+              <div className="flex items-center justify-center space-x-3">
+                <div className="text-sm md:text-base font-medium bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
                   Escuchando...
                 </div>
-                {[...Array(5)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="w-1 bg-gradient-to-t from-purple-500 to-blue-500 rounded-full animate-pulse"
-                    style={{ 
-                      height: `${16 + Math.random() * 8}px`,
-                      animationDelay: `${i * 0.1}s`
-                    }}
-                  />
-                ))}
+                <div className="flex items-center space-x-1">
+                  {[...Array(5)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="w-1 bg-gradient-to-t from-purple-500 to-blue-500 rounded-full animate-pulse"
+                      style={{ 
+                        height: `${12 + Math.random() * 12}px`,
+                        animationDelay: `${i * 0.15}s`,
+                        animationDuration: '0.8s'
+                      }}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
           </div>
