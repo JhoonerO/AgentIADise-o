@@ -19,17 +19,17 @@ export default function PulsingBorderShader({ size = "w-20 h-20", theme = "dark"
     <PulsingBorder
       colors={theme === "dark" 
         ? ["#ffffff", "#E77EDC", "#C800DE", "#BEECFF"]
-        : ["#9333EA", "#EC4899", "#8B5CF6", "#A855F7"]
+        : ["#9333EA", "#EC4899", "#8B5CF6", "#BEECFF"]
       }
       colorBack="#00000000"
       speed={1.5}
       roundness={1}
-      thickness={theme === "dark" ? 0.05 : 0.03}
+      thickness={theme === "dark" ? 0.05 : 0.05}
       softness={0.1}
-      intensity={theme === "dark" ? 2 : 1.5}
+      intensity={theme === "dark" ? 2 : 2}
       spotsPerColor={4}
       spotSize={0.1}
-      pulse={theme === "dark" ? 0.4 : 0.3}
+      pulse={theme === "dark" ? 0.4 : 0.4}
       smoke={0.5}
       smokeSize={2}
       scale={0.65}
@@ -41,8 +41,8 @@ export default function PulsingBorderShader({ size = "w-20 h-20", theme = "dark"
         aspectRatio: "1 / 1",
         backgroundImage: theme === "dark"
           ? "radial-gradient(circle in oklab, oklab(0% 0 -.0001 / 0%) 25.22%, oklab(25% 0.12 -0.15 / 0.6) 43.89%, oklab(0% 0 -.0001 / 0%) 60.04%)"
-          : "radial-gradient(circle in oklab, oklab(0% 0 -.0001 / 0%) 25.22%, oklab(75% 0.18 0.15 / 0.4) 43.89%, oklab(0% 0 -.0001 / 0%) 60.04%)",
-        filter: theme === "dark" ? "none" : "blur(2px)",
+          : "radial-gradient(circle in oklab, oklab(0% 0 -.0001 / 0%) 25.22%, oklab(60% 0.3 -0.25 / 0.25) 43.89%, oklab(0% 0 -.0001 / 0%) 60.04%)",
+        filter: theme === "dark" ? "none" : "none",
         opacity: theme === "dark" ? 1 : 0.8
       }}
     />

@@ -11,7 +11,7 @@ import { Mic, MicOff, Send, Play, Pause, Volume2, History, Trash2, Sun, Moon, X,
 import PulsingBorderShader from "../components/ui/pulsing-border-shader"
 
 // Círculo con shader real - Responsive con aspect-ratio fijo
-  function ElegantCircle({ size = "w-20 h-20", className = "", theme = "dark" }) {
+function ElegantCircle({ size = "w-20 h-20", className = "", theme = "dark" }) {
   // Mapeo de tamaños más preciso para mantener círculos perfectos
   const sizeMap = {
     "w-6 h-6": "w-6 h-6 min-w-[24px] min-h-[24px]",
@@ -27,20 +27,20 @@ import PulsingBorderShader from "../components/ui/pulsing-border-shader"
   const finalSize = sizeMap[size] || sizeMap["w-20 h-20"]
   
   return (
-  <div className={`relative ${finalSize} flex items-center justify-center mx-auto aspect-square ${className}`}>
-    {/* Glow effect separado por tema */}
-    <div className={`absolute inset-0 blur-3xl scale-110 ${
-      theme === "dark" 
-        ? "bg-gradient-to-r from-purple-500/20 to-purple-500/20" 
-        : "bg-gradient-to-r from-purple-300/10 to-pink-300/10"
-    }`} />
-    
-    {/* Shader component con tamaño dinámico */}
-    <div className="w-full h-full">
-      <PulsingBorderShader size={size} theme={theme} />
+    <div className={`relative ${finalSize} flex items-center justify-center mx-auto aspect-square ${className}`}>
+      {/* Glow effect separado por tema */}
+      <div className={`absolute inset-0 blur-3xl scale-110 ${
+        theme === "dark" 
+          ? "bg-gradient-to-r from-purple-500/20 to-purple-500/20" 
+          : "bg-gradient-to-r from-purple-500/10 to-pink-500/10"
+      }`} />
+      
+      {/* Shader component con tamaño dinámico y tema correcto */}
+      <div className="w-full h-full">
+        <PulsingBorderShader size={size} theme={theme} />
+      </div>
     </div>
-  </div>
-)
+  )
 }
 
 export default function AIAssistant() {
@@ -398,7 +398,7 @@ export default function AIAssistant() {
                   <Menu className="h-5 w-5" />
                 </Button>
               )}
-              <ElegantCircle size="w-10 h-10 md:w-12 md:h-12" className="shrink-0" />
+              <ElegantCircle size="w-10 h-10 md:w-12 md:h-12" className="shrink-0" theme={theme} />
               <div className="min-w-0">
                 <h1 className="text-xl md:text-2xl font-bold truncate">
                   Natal-<span className="text-[#C972FF]">IA</span>
@@ -442,7 +442,7 @@ export default function AIAssistant() {
             {messages.length === 0 && (
               <div className="text-center py-6 md:py-8">
                 <div className="mb-6 md:mb-8 flex justify-center">
-                  <ElegantCircle size="w-80 h-80" />
+                  <ElegantCircle size="w-80 h-80" theme={theme} />
                 </div>
                 <h3 className="text-xl md:text-2xl font-bold mb-2 md:mb-3">
                   ¡Hola! Soy Natal-<span className="text-[#C972FF]">IA</span>
@@ -460,7 +460,7 @@ export default function AIAssistant() {
               <div key={message.id} className={`flex ${message.isUser ? "justify-end" : "justify-start"}`}>
                 {!message.isUser && (
                   <div className="mr-2 md:mr-3 mt-1 shrink-0">
-                    <ElegantCircle size="w-6 h-6 md:w-8 h-8" />
+                    <ElegantCircle size="w-6 h-6 md:w-8 h-8" theme={theme} />
                   </div>
                 )}
                 <div
@@ -500,7 +500,7 @@ export default function AIAssistant() {
             {isTyping && (
               <div className="flex justify-start">
                 <div className="mr-2 md:mr-3 mt-1 shrink-0">
-                  <ElegantCircle size="w-6 h-6 md:w-8 h-8" />
+                  <ElegantCircle size="w-6 h-6 md:w-8 h-8" theme={theme} />
                 </div>
                 <div className={`rounded-2xl p-3 md:p-4 mr-8 md:mr-12 ${
                   isDark ? 'bg-neutral-800 border border-neutral-700' : 'bg-white border border-neutral-200 shadow-sm'
@@ -529,7 +529,7 @@ export default function AIAssistant() {
           <div className={`px-3 md:px-4 py-4 border-y ${
             isDark ? 'bg-black border-neutral-800' : 'bg-purple-50 border-purple-200'
           }`}>
-            <div className="max-w-4xl mx-auto">
+            <div className="max-4xl mx-auto">
               <div className="flex items-center justify-center space-x-3">
                 <div className="text-sm md:text-base font-medium bg-[#C972FF] bg-clip-text text-transparent">
                   Escuchando...
@@ -565,7 +565,7 @@ export default function AIAssistant() {
                   placeholder="Pregunta lo que quieras"
                   className={`w-full h-11 md:h-12 px-3 md:px-4 rounded-xl border-2 text-sm font-medium transition-colors ${
                     isDark 
-                      ? 'bg-neutral-800/10 border-neutral-700 text-white placeholder-neutral-400 focus:border-neutral-600 focus:outline-none' 
+                      ? 'bg-neutral-800/10 border-neutral-700 text-white placeholder-neutral-400 focus:border-purple-600/50 focus:outline-none' 
                       : 'bg-neutral-50 border-neutral-200 text-neutral-900 placeholder-neutral-500 focus:border-purple-500 focus:outline-none'
                   }`}
                 />
