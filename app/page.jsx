@@ -11,7 +11,7 @@ import { Mic, MicOff, Send, Play, Pause, Volume2, History, Trash2, Sun, Moon, X,
 import PulsingBorderShader from "../components/ui/pulsing-border-shader"
 
 // Círculo con shader real - Responsive con aspect-ratio fijo
-function ElegantCircle({ size = "w-20 h-20", className = "" }) {
+  function ElegantCircle({ size = "w-20 h-20", className = "", theme = "dark" }) {
   // Mapeo de tamaños más preciso para mantener círculos perfectos
   const sizeMap = {
     "w-6 h-6": "w-6 h-6 min-w-[24px] min-h-[24px]",
@@ -27,16 +27,20 @@ function ElegantCircle({ size = "w-20 h-20", className = "" }) {
   const finalSize = sizeMap[size] || sizeMap["w-20 h-20"]
   
   return (
-    <div className={`relative ${finalSize} flex items-center justify-center mx-auto aspect-square ${className}`}>
-      {/* Glow effect exacto del código original */}
-      <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-purple-500/20 blur-3xl scale-110" />
-      
-      {/* Shader component con tamaño dinámico */}
-      <div className="w-full h-full">
-        <PulsingBorderShader size={size} />
-      </div>
+  <div className={`relative ${finalSize} flex items-center justify-center mx-auto aspect-square ${className}`}>
+    {/* Glow effect separado por tema */}
+    <div className={`absolute inset-0 blur-3xl scale-110 ${
+      theme === "dark" 
+        ? "bg-gradient-to-r from-purple-500/20 to-purple-500/20" 
+        : "bg-gradient-to-r from-purple-300/10 to-pink-300/10"
+    }`} />
+    
+    {/* Shader component con tamaño dinámico */}
+    <div className="w-full h-full">
+      <PulsingBorderShader size={size} theme={theme} />
     </div>
-  )
+  </div>
+)
 }
 
 export default function AIAssistant() {
