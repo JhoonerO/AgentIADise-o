@@ -277,10 +277,10 @@ export default function AIAssistant() {
                   e.stopPropagation()
                   startNewConversation()
                 }}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 border border-purple-500/30 ${
                   isDark 
-                    ? 'text-purple-400 hover:text-white hover:bg-gradient-to-r hover:from-purple-500 hover:to-blue-500 border border-purple-500/30 hover:border-transparent' 
-                    : 'text-purple-600 hover:text-white hover:bg-gradient-to-r hover:from-purple-500 hover:to-blue-500 border border-purple-300 hover:border-transparent'
+                    ? 'text-purple-400 hover:text-white hover:bg-[#C972FF] hover:border-transparent' 
+                    : 'text-purple-600 hover:text-white hover:bg-[#C972FF] hover:border-transparent'
                 }`}
               >
                 Nueva
@@ -308,8 +308,8 @@ export default function AIAssistant() {
                     className={`relative p-3 cursor-pointer transition-all duration-200 rounded-xl border ${
                       currentConversationId === conversation.id
                         ? isDark 
-                          ? 'bg-gradient-to-r from-purple-900/50 to-blue-900/50 border-purple-500/60 shadow-lg' 
-                          : 'bg-gradient-to-r from-purple-50 to-blue-50 border-purple-300 shadow-md'
+                          ? 'bg-gradient-to-r from-purple-900/30 to-pink-900/30 border-purple-500/10 shadow-lg' 
+                          : 'bg-gradient-to-r from-purple-50 to-pink-50 border-purple-100 shadow-md'
                         : isDark 
                           ? 'bg-neutral-800/40 hover:bg-neutral-800/70 border-neutral-700/50 hover:border-neutral-600' 
                           : 'bg-white/70 hover:bg-white/90 border-neutral-200/60 hover:border-neutral-300 shadow-sm hover:shadow-md'
@@ -397,7 +397,7 @@ export default function AIAssistant() {
               <ElegantCircle size="w-10 h-10 md:w-12 md:h-12" className="shrink-0" />
               <div className="min-w-0">
                 <h1 className="text-xl md:text-2xl font-bold truncate">
-                  Natal-<span className="text-blue-600">IA</span>
+                  Natal-<span className="text-[#C972FF]">IA</span>
                 </h1>
                 <p className={`text-xs md:text-sm truncate ${isDark ? 'text-neutral-400' : 'text-neutral-600'}`}>
                   Tu asistente premium inteligente
@@ -431,7 +431,7 @@ export default function AIAssistant() {
         <ScrollArea className="flex-1 px-3 md:px-4 relative overflow-visible mb-4">
           {/* Resplandor que se extiende hacia arriba atravesando el header */}
           {messages.length === 0 && (
-            <div className="absolute -top-20 left-1/2 transform -translate-x-1/2 w-80 h-80 md:w-96 md:h-96 bg-gradient-to-r from-purple-600/30 via-pink-500/30 to-blue-600/30 blur-3xl opacity-50 pointer-events-none z-50"></div>
+            <div className="absolute -top-20 left-1/2 transform -translate-x-1/2 w-80 h-80 md:w-96 md:h-96 bg-gradient-to-r from-purple-600/20 via-pink-500/30 to-purple-600/20 blur-3xl opacity-50 pointer-events-none z-50"></div>
           )}
           
           <div className="max-w-4xl mx-auto space-y-3 md:space-y-4 relative pt-4 pb-8">
@@ -441,7 +441,7 @@ export default function AIAssistant() {
                   <ElegantCircle size="w-80 h-80" />
                 </div>
                 <h3 className="text-xl md:text-2xl font-bold mb-2 md:mb-3">
-                  ¡Hola! Soy Natal-<span className="text-blue-600">IA</span>
+                  ¡Hola! Soy Natal-<span className="text-[#C972FF]">IA</span>
                 </h3>
                 <p className={`text-base md:text-lg mb-2 px-4 ${isDark ? 'text-neutral-300' : 'text-neutral-600'}`}>
                   Diseñado para escucharte y responder a todas tus consultas
@@ -456,23 +456,24 @@ export default function AIAssistant() {
               <div key={message.id} className={`flex ${message.isUser ? "justify-end" : "justify-start"}`}>
                 {!message.isUser && (
                   <div className="mr-2 md:mr-3 mt-1 shrink-0">
-                    <ElegantCircle size="w-6 h-6 md:w-8 md:h-8" />
+                    <ElegantCircle size="w-6 h-6 md:w-8 h-8" />
                   </div>
                 )}
                 <div
                   className={`max-w-[85%] md:max-w-[80%] rounded-2xl p-3 md:p-4 ${
                     message.isUser
-                      ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white ml-8 md:ml-12"
+                      ? "text-black ml-8 md:ml-12"
                       : isDark
                         ? "bg-neutral-800 text-neutral-100 mr-8 md:mr-12 border border-neutral-700"
                         : "bg-white text-neutral-900 mr-8 md:mr-12 border border-neutral-200 shadow-sm"
                   }`}
+                  style={message.isUser ? { backgroundColor: '#C972FF' } : {}}
                 >
                   <p className="text-sm leading-relaxed">{message.content}</p>
                   <div className="flex items-center justify-between mt-2 md:mt-3">
                     <span className={`text-xs ${
                       message.isUser 
-                        ? "text-purple-100" 
+                        ? "text-black" 
                         : isDark ? "text-neutral-400" : "text-neutral-500"
                     }`}>
                       {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -495,7 +496,7 @@ export default function AIAssistant() {
             {isTyping && (
               <div className="flex justify-start">
                 <div className="mr-2 md:mr-3 mt-1 shrink-0">
-                  <ElegantCircle size="w-6 h-6 md:w-8 md:h-8" />
+                  <ElegantCircle size="w-6 h-6 md:w-8 h-8" />
                 </div>
                 <div className={`rounded-2xl p-3 md:p-4 mr-8 md:mr-12 ${
                   isDark ? 'bg-neutral-800 border border-neutral-700' : 'bg-white border border-neutral-200 shadow-sm'
@@ -526,7 +527,7 @@ export default function AIAssistant() {
           }`}>
             <div className="max-w-4xl mx-auto">
               <div className="flex items-center justify-center space-x-3">
-                <div className="text-sm md:text-base font-medium bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                <div className="text-sm md:text-base font-medium bg-[#C972FF] bg-clip-text text-transparent">
                   Escuchando...
                 </div>
                 <div className="flex items-center space-x-1">
@@ -581,7 +582,7 @@ export default function AIAssistant() {
               <Button
                 onClick={handleSendMessage}
                 disabled={!input.trim()}
-                className="h-11 w-11 md:h-12 md:w-12 rounded-xl bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center p-0 active:scale-95"
+                className="h-11 w-11 md:h-12 md:w-12 rounded-xl bg-[#C972FF] hover:from-purple-600 hover:to-blue-600 text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center p-0 active:scale-95"
               >
                 <Send className="h-4 w-4 md:h-5 md:w-5" />
               </Button>
