@@ -1,0 +1,41 @@
+# Node modules
+node_modules/
+
+# Next.js build output
+.next/
+
+# Logs
+logs
+*.log
+
+# dotenv environment variable files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Tailwind/PostCSS config (optional if you don’t modify them often)
+tailwind.config.js
+postcss.config.js
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# npm/yarn artifacts
+*.tgz
+.yarn-integrity
+.npm
+jspm_packages/
+.node_repl_history
+*.hot-update.js
+
+node_modules/
+.next/
+*.log
+*.hot-update.js
+.env*
+.vscode/
+.DS_Store
+Thumbs.db

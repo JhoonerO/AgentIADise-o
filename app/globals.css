@@ -1,0 +1,170 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Updated to elegant dark palette with gold accents like the reference image */
+  --background: oklch(0.98 0.005 240); /* Elegant dark gray like the reference */
+  --foreground: oklch(0.15 0.02 240); /* Clean white text */
+  --card: oklch(0.96 0.01 240); /* Slightly lighter dark cards */
+  --card-foreground: oklch(0.2 0.03 240); /* Navy blue */
+  --popover: oklch(0.98 0.005 240);
+  --popover-foreground: oklch(0.15 0.02 240);
+  --primary: oklch(0.25 0.08 240); /* Bugatti blue */
+  --primary-foreground: oklch(0.95 0.01 60); /* Platinum white */
+  --secondary: oklch(0.85 0.02 60); /* Silver */
+  --secondary-foreground: oklch(0.15 0.02 240);
+  --muted: oklch(0.92 0.01 240);
+  --muted-foreground: oklch(0.45 0.02 240);
+  --accent: oklch(0.75 0.12 60); /* Gold accent */
+  --accent-foreground: oklch(0.15 0.02 240);
+  --destructive: oklch(0.55 0.25 15);
+  --destructive-foreground: oklch(0.95 0.01 60);
+  --border: oklch(0.88 0.01 240);
+  --input: oklch(0.96 0.01 240);
+  --ring: oklch(0.25 0.08 240 / 0.3);
+  --chart-1: oklch(0.7 0.15 60);
+  --chart-2: oklch(0.6 0.2 240);
+  --chart-3: oklch(0.5 0.2 270);
+  --chart-4: oklch(0.65 0.2 300);
+  --chart-5: oklch(0.6 0.25 330);
+  --radius: 0.75rem;
+  --sidebar: oklch(0.94 0.01 240);
+  --sidebar-foreground: oklch(0.2 0.03 240);
+  --sidebar-primary: oklch(0.25 0.08 240);
+  --sidebar-primary-foreground: oklch(0.95 0.01 60);
+  --sidebar-accent: oklch(0.75 0.12 60);
+  --sidebar-accent-foreground: oklch(0.15 0.02 240);
+  --sidebar-border: oklch(0.88 0.01 240);
+  --sidebar-ring: oklch(0.25 0.08 240 / 0.3);
+}
+
+.dark {
+  /* Dark mode with premium black and gold accents */
+  --background: oklch(0.08 0.01 240); /* Deep black with blue undertone */
+  --foreground: oklch(0.95 0.01 60); /* Platinum */
+  --card: oklch(0.12 0.02 240); /* Dark blue-black */
+  --card-foreground: oklch(0.88 0.01 60);
+  --popover: oklch(0.08 0.01 240);
+  --popover-foreground: oklch(0.95 0.01 60);
+  --primary: oklch(0.45 0.15 240); /* Bright Bugatti blue */
+  --primary-foreground: oklch(0.08 0.01 240);
+  --secondary: oklch(0.18 0.02 240); /* Dark silver */
+  --secondary-foreground: oklch(0.88 0.01 60);
+  --muted: oklch(0.18 0.01 240);
+  --muted-foreground: oklch(0.65 0.01 60);
+  --accent: oklch(0.85 0.15 65); /* Bright gold */
+  --accent-foreground: oklch(0.08 0.01 240);
+  --destructive: oklch(0.5 0.2 15);
+  --destructive-foreground: oklch(0.95 0.01 60);
+  --border: oklch(0.22 0.02 240);
+  --input: oklch(0.15 0.02 240);
+  --ring: oklch(0.45 0.15 240 / 0.4);
+  --chart-1: oklch(0.6 0.2 264);
+  --chart-2: oklch(0.7 0.17 162);
+  --chart-3: oklch(0.77 0.19 70);
+  --chart-4: oklch(0.63 0.27 304);
+  --chart-5: oklch(0.65 0.25 16);
+  --sidebar: oklch(0.1 0.02 240);
+  --sidebar-foreground: oklch(0.88 0.01 60);
+  --sidebar-primary: oklch(0.45 0.15 240);
+  --sidebar-primary-foreground: oklch(0.08 0.01 240);
+  --sidebar-accent: oklch(0.85 0.15 65);
+  --sidebar-accent-foreground: oklch(0.08 0.01 240);
+  --sidebar-border: oklch(0.22 0.02 240);
+  --sidebar-ring: oklch(0.45 0.15 240 / 0.4);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Custom animations for AI assistant */
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 12px hsl(var(--accent)), 0 0 24px hsl(var(--accent) / 0.4);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 20px hsl(var(--accent)), 0 0 40px hsl(var(--accent) / 0.6);
+    transform: scale(1.02);
+  }
+}
+
+@keyframes wave {
+  0%,
+  100% {
+    height: 20px;
+  }
+  50% {
+    height: 40px;
+  }
+}
+
+@keyframes breathing {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.wave-bar {
+  animation: wave 1s ease-in-out infinite;
+}
+
+.wave-bar:nth-child(2) {
+  animation-delay: 0.1s;
+}
+.wave-bar:nth-child(3) {
+  animation-delay: 0.2s;
+}
+.wave-bar:nth-child(4) {
+  animation-delay: 0.3s;
+}
+.wave-bar:nth-child(5) {
+  animation-delay: 0.4s;
+}
+
+.premium-gradient {
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.elegant-gradient {
+  background: linear-gradient(135deg, hsl(var(--accent)), hsl(var(--primary)));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.golden-divider {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, hsl(var(--accent)), transparent);
+  margin: 1rem 0;
+}
+
+/* Custom gradient utilities */
+.bg-gradient-conic {
+  background: conic-gradient(var(--tw-gradient-stops));
+}
+
+.bg-gradient-radial {
+  background: radial-gradient(var(--tw-gradient-stops));
+}
