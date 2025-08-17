@@ -5,46 +5,36 @@ import { Button } from "../components/ui/button"
 import { Input } from "../components/ui/input"
 import { Card } from "../components/ui/card"
 import { ScrollArea } from "../components/ui/scroll-area"
-import { Mic, MicOff, Send, Play, Pause, Volume2, History, Trash2, Sun, Moon } from "lucide-react"
+import { Mic, MicOff, Send, Play, Pause, Volume2, History, Trash2, Sun, Moon, X, Menu } from "lucide-react"
 
-// Círculo elegante SIEMPRE morado (marca de Natal-IA)
-function ElegantCircle({ size = "w-20 h-20" }) {
-  // Siempre colores purple/pink/blue - la marca de Natal-IA
+// Importar el shader component
+import PulsingBorderShader from "../components/ui/pulsing-border-shader"
+
+// Círculo con shader real - Responsive con aspect-ratio fijo
+function ElegantCircle({ size = "w-20 h-20", className = "" }) {
+  // Mapeo de tamaños más preciso para mantener círculos perfectos
+  const sizeMap = {
+    "w-6 h-6": "w-6 h-6 min-w-[24px] min-h-[24px]",
+    "w-8 h-8": "w-8 h-8 min-w-[32px] min-h-[32px]",
+    "w-10 h-10": "w-10 h-10 min-w-[40px] min-h-[40px]",
+    "w-12 h-12": "w-12 h-12 min-w-[48px] min-h-[48px]",
+    "w-20 h-20": "w-20 h-20 min-w-[80px] min-h-[80px]",
+    "w-48 h-48": "w-48 h-48 min-w-[192px] min-h-[192px]",
+    "w-64 h-64": "w-64 h-64 min-w-[256px] min-h-[256px]",
+    "w-80 h-80": "w-80 h-80 min-w-[320px] min-h-[320px]"
+  }
+  
+  const finalSize = sizeMap[size] || sizeMap["w-20 h-20"]
+  
   return (
-    <div className={`relative ${size} flex items-center justify-center`}>
-      {/* Resplandor exterior masivo - extendido */}
-      <div className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-600/50 via-pink-500/50 via-orange-400/30 to-blue-600/50 blur-3xl scale-[4] animate-pulse opacity-70"></div>
-      <div className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-500/30 via-pink-400/40 to-blue-500/30 blur-2xl scale-[3.5] animate-pulse" style={{animationDelay: '0.5s'}}></div>
+    <div className={`relative ${finalSize} flex items-center justify-center mx-auto aspect-square ${className}`}>
+      {/* Glow effect exacto del código original */}
+      <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-purple-500/20 blur-3xl scale-110" />
       
-      {/* Borde exterior brillante */}
-      <div className="absolute inset-0 rounded-full p-[2px] bg-gradient-to-r from-purple-400 via-pink-300 via-orange-300 to-blue-400 animate-spin-slow shadow-2xl">
-        <div className="w-full h-full rounded-full bg-gradient-to-br from-gray-900 via-purple-950/50 to-gray-900"></div>
+      {/* Shader component con tamaño dinámico */}
+      <div className="w-full h-full">
+        <PulsingBorderShader size={size} />
       </div>
-      
-      {/* Círculo intermedio con gradiente sutil */}
-      <div className="absolute inset-2 rounded-full bg-gradient-to-br from-purple-900/30 via-transparent to-blue-900/30"></div>
-      
-      {/* Efectos de luz brillante en el borde */}
-      <div className="absolute inset-0 rounded-full">
-        <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-white rounded-full blur-md opacity-90 animate-pulse"></div>
-        <div className="absolute -top-0.5 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white rounded-full"></div>
-        <div className="absolute top-1/4 -right-1 w-3 h-3 bg-purple-300 rounded-full blur-sm opacity-80 animate-pulse" style={{animationDelay: '0.3s'}}></div>
-        <div className="absolute bottom-1/3 -left-1 w-2 h-2 bg-blue-400 rounded-full blur-sm opacity-70 animate-pulse" style={{animationDelay: '0.8s'}}></div>
-        <div className="absolute bottom-1/4 right-1/4 w-2 h-2 bg-pink-400 rounded-full blur-sm opacity-60 animate-pulse" style={{animationDelay: '1.2s'}}></div>
-      </div>
-      
-      {/* Centro brillante */}
-      <div className="relative z-10 flex items-center justify-center">
-        <div className="w-4 h-4 rounded-full bg-white/10 blur-sm animate-pulse"></div>
-        <div className="absolute w-3 h-3 rounded-full bg-white/90 shadow-lg"></div>
-        <div className="absolute w-2 h-2 rounded-full bg-white shadow-sm"></div>
-      </div>
-      
-      {/* Resplandor interior suave */}
-      <div className="absolute inset-6 rounded-full bg-gradient-radial from-purple-400/20 via-pink-400/10 to-transparent animate-pulse opacity-60" style={{animationDelay: '0.4s'}}></div>
-      
-      {/* Efecto de rotación de luz */}
-      <div className="absolute inset-0 rounded-full bg-gradient-to-r from-transparent via-white/5 to-transparent animate-spin-slow opacity-40"></div>
     </div>
   )
 }
@@ -59,9 +49,21 @@ export default function AIAssistant() {
   const [currentConversationId, setCurrentConversationId] = useState(null)
   const [isTyping, setIsTyping] = useState(false)
   const [theme, setTheme] = useState("dark")
+  const [isMobile, setIsMobile] = useState(false)
 
   const messagesEndRef = useRef(null)
   const recognitionRef = useRef(null)
+
+  // Detectar si es móvil
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -178,27 +180,57 @@ export default function AIAssistant() {
   }
 
   const startNewConversation = () => {
+    // Guardar la conversación actual solo si tiene mensajes
     if (messages.length > 0) {
       const newConversation = {
         id: Date.now().toString(),
-        title: messages[0]?.content.slice(0, 50) + "..." || "Nueva conversación",
+        title: messages.find(m => m.isUser)?.content.slice(0, 30) + "..." || "Nueva conversación",
         messages: [...messages],
         createdAt: new Date(),
       }
       setConversations((prev) => [newConversation, ...prev])
     }
+    
+    // Limpiar la conversación actual
     setMessages([])
     setCurrentConversationId(null)
+    setInput("")
+    
+    // Cerrar historial en móvil después de crear nueva conversación
+    if (isMobile) {
+      setShowHistory(false)
+    }
   }
 
   const loadConversation = (conversation) => {
+    // Guardar la conversación actual antes de cargar otra
+    if (messages.length > 0 && currentConversationId !== conversation.id) {
+      const currentConversation = {
+        id: currentConversationId || Date.now().toString(),
+        title: messages.find(m => m.isUser)?.content.slice(0, 30) + "..." || "Conversación sin título",
+        messages: [...messages],
+        createdAt: new Date(),
+      }
+      
+      setConversations((prev) => {
+        const filtered = prev.filter(conv => conv.id !== currentConversationId)
+        return [currentConversation, ...filtered]
+      })
+    }
+    
     setMessages(conversation.messages)
     setCurrentConversationId(conversation.id)
-    setShowHistory(false)
+    setShowHistory(false) // Siempre cerrar historial al cargar conversación
   }
 
   const deleteConversation = (conversationId) => {
     setConversations((prev) => prev.filter((conv) => conv.id !== conversationId))
+    
+    // Si estamos viendo la conversación que se está eliminando, limpiar
+    if (currentConversationId === conversationId) {
+      setMessages([])
+      setCurrentConversationId(null)
+    }
   }
 
   const toggleTheme = () => {
@@ -208,43 +240,108 @@ export default function AIAssistant() {
   const isDark = theme === "dark"
 
   return (
-    <div className={`flex h-screen transition-colors duration-300 ${isDark ? 'bg-black text-white' : 'bg-gray-50 text-gray-900'}`}>
+    <div className={`flex h-screen transition-colors duration-300 ${isDark ? 'bg-black text-white' : 'bg-neutral-50 text-neutral-900'} relative`}>
+      {/* Overlay para móvil cuando está abierto el historial */}
+      {isMobile && showHistory && (
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"
+          onClick={() => setShowHistory(false)}
+        />
+      )}
+
       {/* Sidebar - History */}
       <div
-        className={`transition-all duration-300 border-r backdrop-blur-sm ${
-          isDark ? 'bg-black/40 border-gray-800/30' : 'bg-white/40 border-gray-200/30'
-        } ${showHistory ? "w-80" : "w-0 overflow-hidden"}`}
+        className={`transition-all duration-300 border-r backdrop-blur-sm overflow-hidden z-50 ${
+          isDark ? 'bg-black/95 border-neutral-800/30' : 'bg-white/95 border-neutral-200/30'
+        } ${
+          isMobile 
+            ? showHistory 
+              ? "fixed left-0 top-0 w-80 h-full shadow-2xl" 
+              : "fixed left-0 top-0 w-0 h-full"
+            : showHistory 
+              ? "w-72" 
+              : "w-0"
+        }`}
       >
-        <div className="p-4">
+        <div className="p-3 h-full flex flex-col">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">Historial</h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={startNewConversation}
-              className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
-            >
-              Nueva
-            </Button>
+            <h2 className="text-lg font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+              Historial
+            </h2>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  startNewConversation()
+                }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
+                  isDark 
+                    ? 'text-purple-400 hover:text-white hover:bg-gradient-to-r hover:from-purple-500 hover:to-blue-500 border border-purple-500/30 hover:border-transparent' 
+                    : 'text-purple-600 hover:text-white hover:bg-gradient-to-r hover:from-purple-500 hover:to-blue-500 border border-purple-300 hover:border-transparent'
+                }`}
+              >
+                Nueva
+              </Button>
+              {isMobile && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowHistory(false)}
+                  className={`p-1.5 rounded-lg ${
+                    isDark ? 'text-neutral-400 hover:text-white hover:bg-neutral-800' : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100'
+                  }`}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
           </div>
-          <ScrollArea className="h-[calc(100vh-120px)]">
-            <div className="space-y-2">
+          
+          <ScrollArea className="flex-1">
+            <div className="space-y-2 pr-2">
               {conversations.map((conversation) => (
                 <div key={conversation.id} className="group">
-                  <Card
-                    className={`p-3 cursor-pointer transition-colors ${
-                      isDark 
-                        ? 'bg-gray-800/50 hover:bg-gray-800 border-gray-700' 
-                        : 'bg-gray-50 hover:bg-gray-100 border-gray-200'
-                    }`}
+                  <div
+                    className={`relative p-3 cursor-pointer transition-all duration-200 rounded-xl border ${
+                      currentConversationId === conversation.id
+                        ? isDark 
+                          ? 'bg-gradient-to-r from-purple-900/50 to-blue-900/50 border-purple-500/60 shadow-lg' 
+                          : 'bg-gradient-to-r from-purple-50 to-blue-50 border-purple-300 shadow-md'
+                        : isDark 
+                          ? 'bg-neutral-800/40 hover:bg-neutral-800/70 border-neutral-700/50 hover:border-neutral-600' 
+                          : 'bg-white/70 hover:bg-white/90 border-neutral-200/60 hover:border-neutral-300 shadow-sm hover:shadow-md'
+                    } hover:translate-y-[-1px] active:scale-95`}
                     onClick={() => loadConversation(conversation)}
                   >
                     <div className="flex items-start justify-between">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{conversation.title}</p>
-                        <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                          {conversation.createdAt.toLocaleDateString()}
+                      <div className="flex-1 min-w-0 mr-2">
+                        <p className={`text-sm font-medium truncate mb-1.5 ${
+                          currentConversationId === conversation.id
+                            ? isDark ? 'text-white' : 'text-purple-900'
+                            : isDark ? 'text-neutral-200' : 'text-neutral-800'
+                        }`}>
+                          {conversation.title}
                         </p>
+                        <div className="flex items-center space-x-1.5">
+                          <div className={`w-1.5 h-1.5 rounded-full ${
+                            currentConversationId === conversation.id
+                              ? 'bg-gradient-to-r from-purple-400 to-blue-400'
+                              : isDark ? 'bg-neutral-500' : 'bg-neutral-400'
+                          }`}></div>
+                          <p className={`text-xs ${
+                            currentConversationId === conversation.id
+                              ? isDark ? 'text-purple-200' : 'text-purple-700'
+                              : isDark ? 'text-neutral-400' : 'text-neutral-500'
+                          }`}>
+                            {conversation.createdAt.toLocaleDateString('es-ES', { 
+                              day: 'numeric', 
+                              month: 'short'
+                            })}
+                          </p>
+                        </div>
                       </div>
                       <Button
                         variant="ghost"
@@ -253,76 +350,103 @@ export default function AIAssistant() {
                           e.stopPropagation()
                           deleteConversation(conversation.id)
                         }}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity ml-2 h-6 w-6 p-0"
+                        className={`opacity-0 group-hover:opacity-100 transition-opacity duration-200 h-6 w-6 p-0 shrink-0 rounded-md ${
+                          isDark 
+                            ? 'hover:bg-red-500/20 hover:text-red-400 text-neutral-400' 
+                            : 'hover:bg-red-50 hover:text-red-500 text-neutral-500'
+                        }`}
                       >
-                        <Trash2 className="h-3 w-3" />
+                        <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </div>
-                  </Card>
+                  </div>
                 </div>
               ))}
+              {conversations.length === 0 && (
+                <div className={`text-center py-8 ${isDark ? 'text-neutral-400' : 'text-neutral-500'}`}>
+                  <div className={`w-12 h-12 mx-auto mb-3 rounded-lg flex items-center justify-center ${
+                    isDark ? 'bg-neutral-800/50' : 'bg-neutral-200/50'
+                  }`}>
+                    <History className="w-6 h-6" />
+                  </div>
+                  <p className="text-xs font-medium mb-1">No hay conversaciones</p>
+                  <p className="text-xs opacity-75">Inicia una nueva para comenzar</p>
+                </div>
+              )}
             </div>
           </ScrollArea>
         </div>
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col relative">
+      <div className="flex-1 flex flex-col relative min-w-0">
         {/* Header */}
-        <header className={`border-b p-4 relative ${isDark ? 'bg-black/20 border-gray-800/20' : 'bg-white/20 border-gray-200/20'}`}>
+        <header className={`border-b p-3 md:p-4 relative ${isDark ? 'bg-black/20 border-neutral-800/20' : 'bg-white/20 border-neutral-200/20'}`}>
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <ElegantCircle size="w-12 h-12" />
-              <div>
-                <h1 className="text-2xl font-bold">
+            <div className="flex items-center space-x-3 md:space-x-4 min-w-0">
+              {isMobile && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowHistory(!showHistory)}
+                  className={`p-2 mr-1 ${isDark ? 'text-neutral-300 hover:text-white hover:bg-neutral-800' : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100'}`}
+                >
+                  <Menu className="h-5 w-5" />
+                </Button>
+              )}
+              <ElegantCircle size="w-10 h-10 md:w-12 md:h-12" className="shrink-0" />
+              <div className="min-w-0">
+                <h1 className="text-xl md:text-2xl font-bold truncate">
                   Natal-<span className="text-blue-600">IA</span>
                 </h1>
-                <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                <p className={`text-xs md:text-sm truncate ${isDark ? 'text-neutral-400' : 'text-neutral-600'}`}>
                   Tu asistente premium inteligente
                 </p>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 shrink-0">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={toggleTheme}
-                className={`${isDark ? 'text-gray-300 hover:text-white hover:bg-gray-800' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'}`}
+                className={`p-2 ${isDark ? 'text-neutral-300 hover:text-white hover:bg-neutral-800' : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100'}`}
               >
-                {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                {isDark ? <Sun className="h-4 w-4 md:h-5 md:w-5" /> : <Moon className="h-4 w-4 md:h-5 md:w-5" />}
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowHistory(!showHistory)}
-                className={`${isDark ? 'text-gray-300 hover:text-white hover:bg-gray-800' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'}`}
-              >
-                <History className="h-5 w-5" />
-              </Button>
+              {!isMobile && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowHistory(!showHistory)}
+                  className={`p-2 ${isDark ? 'text-neutral-300 hover:text-white hover:bg-neutral-800' : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100'}`}
+                >
+                  <History className="h-5 w-5" />
+                </Button>
+              )}
             </div>
           </div>
         </header>
 
         {/* Messages */}
-        <ScrollArea className="flex-1 px-4 pb-4 relative overflow-visible">
+        <ScrollArea className="flex-1 px-3 md:px-4 relative overflow-visible mb-4">
           {/* Resplandor que se extiende hacia arriba atravesando el header */}
           {messages.length === 0 && (
-            <div className="absolute -top-20 left-1/2 transform -translate-x-1/2 w-96 h-96 bg-gradient-to-r from-purple-600/30 via-pink-500/30 to-blue-600/30 blur-3xl opacity-50 pointer-events-none z-50"></div>
+            <div className="absolute -top-20 left-1/2 transform -translate-x-1/2 w-80 h-80 md:w-96 md:h-96 bg-gradient-to-r from-purple-600/30 via-pink-500/30 to-blue-600/30 blur-3xl opacity-50 pointer-events-none z-50"></div>
           )}
           
-          <div className="max-w-4xl mx-auto space-y-4 relative pt-4">
+          <div className="max-w-4xl mx-auto space-y-3 md:space-y-4 relative pt-4 pb-8">
             {messages.length === 0 && (
-              <div className="text-center py-12">
-                <div className="mb-6 flex justify-center">
-                  <ElegantCircle size="w-32 h-32" />
+              <div className="text-center py-6 md:py-8">
+                <div className="mb-6 md:mb-8 flex justify-center">
+                  <ElegantCircle size="w-80 h-80" />
                 </div>
-                <h3 className="text-2xl font-bold mb-3">
+                <h3 className="text-xl md:text-2xl font-bold mb-2 md:mb-3">
                   ¡Hola! Soy Natal-<span className="text-blue-600">IA</span>
                 </h3>
-                <p className={`text-lg mb-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                <p className={`text-base md:text-lg mb-2 px-4 ${isDark ? 'text-neutral-300' : 'text-neutral-600'}`}>
                   Diseñado para escucharte y responder a todas tus consultas
                 </p>
-                <p className={`${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                <p className={`text-sm md:text-base px-4 ${isDark ? 'text-neutral-400' : 'text-neutral-500'}`}>
                   Mi función principal es escucharte - habla conmigo o escribe tu mensaje
                 </p>
               </div>
@@ -331,34 +455,34 @@ export default function AIAssistant() {
             {messages.map((message) => (
               <div key={message.id} className={`flex ${message.isUser ? "justify-end" : "justify-start"}`}>
                 {!message.isUser && (
-                  <div className="mr-3 mt-1">
-                    <ElegantCircle size="w-8 h-8" />
+                  <div className="mr-2 md:mr-3 mt-1 shrink-0">
+                    <ElegantCircle size="w-6 h-6 md:w-8 md:h-8" />
                   </div>
                 )}
                 <div
-                  className={`max-w-[80%] rounded-2xl p-4 ${
+                  className={`max-w-[85%] md:max-w-[80%] rounded-2xl p-3 md:p-4 ${
                     message.isUser
-                      ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white ml-12"
+                      ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white ml-8 md:ml-12"
                       : isDark
-                        ? "bg-gray-800 text-gray-100 mr-12 border border-gray-700"
-                        : "bg-white text-gray-900 mr-12 border border-gray-200 shadow-sm"
+                        ? "bg-neutral-800 text-neutral-100 mr-8 md:mr-12 border border-neutral-700"
+                        : "bg-white text-neutral-900 mr-8 md:mr-12 border border-neutral-200 shadow-sm"
                   }`}
                 >
                   <p className="text-sm leading-relaxed">{message.content}</p>
-                  <div className="flex items-center justify-between mt-3">
+                  <div className="flex items-center justify-between mt-2 md:mt-3">
                     <span className={`text-xs ${
                       message.isUser 
                         ? "text-purple-100" 
-                        : isDark ? "text-gray-400" : "text-gray-500"
+                        : isDark ? "text-neutral-400" : "text-neutral-500"
                     }`}>
-                      {message.timestamp.toLocaleTimeString()}
+                      {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                     {message.hasAudio && !message.isUser && (
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => playAudio(message.id)}
-                        className="h-7 w-7 p-0 ml-2"
+                        className="h-6 w-6 md:h-7 md:w-7 p-0 ml-2"
                       >
                         {isPlaying ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
                       </Button>
@@ -370,8 +494,11 @@ export default function AIAssistant() {
 
             {isTyping && (
               <div className="flex justify-start">
-                <div className={`rounded-2xl p-4 mr-12 ${
-                  isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200 shadow-sm'
+                <div className="mr-2 md:mr-3 mt-1 shrink-0">
+                  <ElegantCircle size="w-6 h-6 md:w-8 md:h-8" />
+                </div>
+                <div className={`rounded-2xl p-3 md:p-4 mr-8 md:mr-12 ${
+                  isDark ? 'bg-neutral-800 border border-neutral-700' : 'bg-white border border-neutral-200 shadow-sm'
                 }`}>
                   <div className="flex space-x-1">
                     <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"></div>
@@ -394,12 +521,12 @@ export default function AIAssistant() {
 
         {/* Voice Visualization */}
         {isListening && (
-          <div className={`px-4 py-3 border-y ${
-            isDark ? 'bg-black border-gray-800' : 'bg-purple-50 border-purple-200'
+          <div className={`px-3 md:px-4 py-3 border-y ${
+            isDark ? 'bg-black border-neutral-800' : 'bg-purple-50 border-purple-200'
           }`}>
             <div className="max-w-4xl mx-auto">
               <div className="flex items-center justify-center space-x-2">
-                <ElegantCircle size="w-10 h-10" />
+                <ElegantCircle size="w-8 h-8 md:w-10 md:h-10" className="shrink-0" />
                 <div className="text-sm font-medium bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mr-4">
                   Escuchando...
                 </div>
@@ -419,61 +546,47 @@ export default function AIAssistant() {
         )}
 
         {/* Input Area */}
-        <div className={`p-4 border-t ${isDark ? 'bg-black border-gray-800' : 'bg-white border-gray-200'}`}>
+        <div className={`p-4 md:p-6 border-t ${isDark ? 'bg-black border-neutral-800' : 'bg-white border-neutral-200'}`}>
           <div className="max-w-4xl mx-auto">
-            <div className="flex items-end space-x-3">
-              <div className="flex-1">
-                <Input
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="flex-1 min-w-0">
+                <input
+                  type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="Pregunta lo que quieras"
-                  className={`min-h-[48px] rounded-xl border-2 ${
+                  className={`w-full h-11 md:h-12 px-3 md:px-4 rounded-xl border-2 text-sm font-medium transition-colors ${
                     isDark 
-                      ? 'bg-purple-900/20 border-purple-700/50 text-white placeholder-purple-300 focus:border-purple-500' 
-                      : 'bg-gray-50 border-gray-200 focus:border-purple-500'
+                      ? 'bg-neutral-800/10 border-neutral-700 text-white placeholder-neutral-400 focus:border-neutral-600 focus:outline-none' 
+                      : 'bg-neutral-50 border-neutral-200 text-neutral-900 placeholder-neutral-500 focus:border-purple-500 focus:outline-none'
                   }`}
                 />
               </div>
               <Button
                 variant={isListening ? "default" : "outline"}
-                size="sm"
                 onClick={isListening ? stopListening : startListening}
-                className={`h-12 w-12 p-0 rounded-xl transition-all duration-200 ${
+                className={`h-11 w-11 md:h-12 md:w-12 rounded-xl transition-all duration-200 flex items-center justify-center p-0 active:scale-95 ${
                   isListening
                     ? "bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white"
                     : isDark
-                      ? "border-purple-700 text-purple-300 hover:bg-purple-900/30 hover:text-purple-200"
+                      ? "border-neutral-700 text-neutral-300 hover:bg-neutral-800 hover:text-white hover:border-neutral-600"
                       : "border-purple-300 text-purple-600 hover:bg-purple-50 hover:text-purple-700"
                 }`}
               >
-                {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+                {isListening ? <MicOff className="h-4 w-4 md:h-5 md:w-5" /> : <Mic className="h-4 w-4 md:h-5 md:w-5" />}
               </Button>
               <Button
                 onClick={handleSendMessage}
                 disabled={!input.trim()}
-                className="h-12 w-12 p-0 rounded-xl bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white transition-all duration-200"
+                className="h-11 w-11 md:h-12 md:w-12 rounded-xl bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center p-0 active:scale-95"
               >
-                <Send className="h-5 w-5" />
+                <Send className="h-4 w-4 md:h-5 md:w-5" />
               </Button>
             </div>
           </div>
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes spin-slow {
-          from {
-            transform: rotate(0deg);
-          }
-          to {
-            transform: rotate(360deg);
-          }
-        }
-        .animate-spin-slow {
-          animation: spin-slow 4s linear infinite;
-        }
-      `}</style>
     </div>
   )
 }

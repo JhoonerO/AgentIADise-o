@@ -15,9 +15,6 @@ logs
 .env.test.local
 .env.production.local
 
-# Tailwind/PostCSS config (optional if you don’t modify them often)
-tailwind.config.js
-postcss.config.js
 
 # OS-specific files
 .DS_Store
