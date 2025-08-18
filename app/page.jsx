@@ -48,7 +48,7 @@ INSTRUCCIÓN CRÍTICA: NO busques información en internet. NO uses citas web. E
 - Si el usuario dice "me llamo [NOMBRE]", recuerda ESE nombre para toda la conversación
 - NUNCA confundas tu nombre (Natal-IA) con el nombre del usuario
 - Mantén consistencia en toda la conversación
-- Si te preguntan "¿qué recuerdas de mí?" lista la información que te han compartido
+- Si te preguntan "¿qué recuerdas de mí?" lista la información que te han contado
 
 # Cómo responder
 - Con mi propio conocimiento y personalidad
@@ -128,6 +128,7 @@ export default function AIAssistant() {
   const [currentConversationContext, setCurrentConversationContext] = useState([])
 
   const messagesEndRef = useRef(null)
+  const messagesContainerRef = useRef(null) // ✅ NUEVO: Ref para el contenedor de mensajes
   const recognitionRef = useRef(null)
   const inputRef = useRef(null)
   const audioRef = useRef(null)
@@ -176,7 +177,14 @@ export default function AIAssistant() {
     }
   }, [isMobile, isTablet])
 
+  // ✅ MEJORADO: Función de scroll más robusta
   const scrollToBottom = () => {
+    if (messagesContainerRef.current) {
+      const container = messagesContainerRef.current
+      // Usar scrollTop para un scroll más suave y confiable
+      container.scrollTop = container.scrollHeight
+    }
+    // Mantener el método anterior como fallback
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
@@ -824,10 +832,21 @@ export default function AIAssistant() {
           </div>
         </header>
 
-        {/* CONTENEDOR PRINCIPAL DE MENSAJES - CON SCROLL NATIVO */}
-        <div className={`flex-1 flex flex-col pt-16 md:pt-20 ${isDark ? "bg-black" : "bg-neutral-50"} ${showHistory && !(isMobile || isTablet) ? "ml-72" : ""}`}>
-          {/* Área de mensajes con scroll propio */}
-          <div className={`flex-1 relative overflow-y-auto ${isDark ? "bg-black" : "bg-neutral-50"}`}>
+        {/* ✅ CONTENEDOR PRINCIPAL MEJORADO CON SCROLL OPTIMIZADO */}
+        <div className={`flex-1 flex flex-col pt-16 md:pt-20 ${isDark ? "bg-black" : "bg-neutral-50"} ${showHistory && !(isMobile || isTablet) ? "ml-72" : ""} h-full overflow-hidden`}>
+          
+          {/* ✅ ÁREA DE MENSAJES CON SCROLL MEJORADO */}
+          <div 
+            ref={messagesContainerRef}
+            className={`flex-1 overflow-y-auto overflow-x-hidden ${isDark ? "bg-black" : "bg-neutral-50"}`}
+            style={{
+              // ✅ Configuración de scroll más suave
+              scrollBehavior: 'smooth',
+              scrollbarWidth: 'thin',
+              scrollbarColor: isDark ? '#374151 #1f2937' : '#d1d5db #f3f4f6'
+            }}
+          >
+            {/* Fondo decorativo cuando no hay mensajes */}
             {messages.length === 0 && (
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 md:w-96 md:h-96 bg-gradient-to-r from-purple-600/20 via-pink-500/30 to-purple-600/20 blur-3xl opacity-50 pointer-events-none z-10"></div>
             )}
@@ -869,6 +888,7 @@ export default function AIAssistant() {
                   </div>
                 )}
 
+                {/* ✅ LISTA DE MENSAJES CON SCROLL OPTIMIZADO */}
                 {messages.map((message) => (
                   <div key={message.id} className={`flex ${message.isUser ? "justify-end" : "justify-start"}`}>
                     {!message.isUser && (
@@ -927,6 +947,7 @@ export default function AIAssistant() {
                   </div>
                 ))}
 
+                {/* Indicador de escritura */}
                 {isTyping && (
                   <div className="flex justify-start">
                     <div className="mr-2 md:mr-3 mt-1 shrink-0">
@@ -954,7 +975,8 @@ export default function AIAssistant() {
                   </div>
                 )}
 
-                <div ref={messagesEndRef} />
+                {/* ✅ Elemento de referencia para el scroll automático */}
+                <div ref={messagesEndRef} className="h-1" />
               </div>
             </div>
           </div>
@@ -989,7 +1011,7 @@ export default function AIAssistant() {
             </div>
           )}
 
-          {/* Área de input - FIJA EN LA PARTE INFERIOR */}
+          {/* ✅ ÁREA DE INPUT - FIJA EN LA PARTE INFERIOR CON MEJOR ESPACIADO */}
           <div
             className={`p-4 md:p-6 border-t backdrop-blur-md flex-shrink-0 ${
               isDark ? "bg-black/90 border-neutral-800" : "bg-white/90 border-neutral-200"
@@ -1049,6 +1071,34 @@ export default function AIAssistant() {
           </div>
         </div>
       </div>
+
+      {/* ✅ ESTILOS CSS MEJORADOS PARA EL SCROLL */}
+      <style jsx>{`
+        /* Personalización de la scrollbar para navegadores WebKit */
+        ::-webkit-scrollbar {
+          width: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+          background: ${isDark ? '#1f2937' : '#f3f4f6'};
+          border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+          background: ${isDark ? '#374151' : '#d1d5db'};
+          border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+          background: ${isDark ? '#4b5563' : '#9ca3af'};
+        }
+        
+        /* Para Firefox */
+        * {
+          scrollbar-width: thin;
+          scrollbar-color: ${isDark ? '#374151 #1f2937' : '#d1d5db #f3f4f6'};
+        }
+      `}</style>
     </div>
   )
 }
