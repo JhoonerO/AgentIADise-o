@@ -616,7 +616,7 @@ export default function AIAssistant() {
         {/* Header del historial */}
         <div className={`p-3 md:p-4 border-b ${isDark ? "border-neutral-800/30" : "border-neutral-200/30"}`}>
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
               Historial
             </h2>
             <div className="flex items-center space-x-2">
@@ -628,7 +628,7 @@ export default function AIAssistant() {
                   e.stopPropagation()
                   startNewConversation()
                 }}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 border border-purple-500/30 ${
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 border border-purple-500/30 ${
                   isDark
                     ? "text-purple-400 hover:text-white hover:bg-[#C972FF] hover:border-transparent"
                     : "text-purple-600 hover:text-white hover:bg-[#C972FF] hover:border-transparent"
@@ -843,7 +843,7 @@ export default function AIAssistant() {
               // ✅ Configuración de scroll más suave
               scrollBehavior: 'smooth',
               scrollbarWidth: 'thin',
-              scrollbarColor: isDark ? '#374151 #1f2937' : '#d1d5db #f3f4f6'
+              scrollbarColor: isDark ? '#000000ff #000000ff' : '#f4f4f4ff #f4f4f4ff'
             }}
           >
             {/* Fondo decorativo cuando no hay mensajes */}
@@ -867,13 +867,11 @@ export default function AIAssistant() {
                     <p className={`text-sm md:text-base px-4 mb-4 ${isDark ? "text-neutral-400" : "text-neutral-500"}`}>
                       {voiceMode 
                         ? "🎤 Modo voz activo - Charlemos y te ayudo con lo que necesites"
-                        : "⌨️ Modo texto activo - Escribe tus preguntas y charlemos un rato"
+                        : "Está el modo texto activo - Escribe tus preguntas y charlemos un rato"
                       }
                     </p>
-                    <p className={`text-xs px-4 mb-6 ${isDark ? "text-neutral-500" : "text-neutral-400"}`}>
-                      ✨ Cada conversación es independiente y tiene su propia memoria
-                    </p>
-                    <div className="mt-4 flex justify-center">
+                    
+                   {/* <div className="mt-4 flex justify-center">
                       <Button
                         onClick={toggleVoiceMode}
                         className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 ${
@@ -884,7 +882,7 @@ export default function AIAssistant() {
                       >
                         {voiceMode ? "Cambiar a Modo Texto" : "Activar Modo Voz"}
                       </Button>
-                    </div>
+                    </div> */}
                   </div>
                 )}
 
@@ -1072,7 +1070,7 @@ export default function AIAssistant() {
         </div>
       </div>
 
-      {/* ✅ ESTILOS CSS MEJORADOS PARA EL SCROLL */}
+      {/* ✅ ESTILOS CSS MEJORADOS PARA EL SCROLL EN NEUTRAL */}
       <style jsx>{`
         /* Personalización de la scrollbar para navegadores WebKit */
         ::-webkit-scrollbar {
@@ -1080,23 +1078,23 @@ export default function AIAssistant() {
         }
         
         ::-webkit-scrollbar-track {
-          background: ${isDark ? '#1f2937' : '#f3f4f6'};
+          background: ${isDark ? '#262626' : '#f5f5f5'};
           border-radius: 3px;
         }
         
         ::-webkit-scrollbar-thumb {
-          background: ${isDark ? '#374151' : '#d1d5db'};
+          background: ${isDark ? '#525252' : '#a3a3a3'};
           border-radius: 3px;
         }
         
         ::-webkit-scrollbar-thumb:hover {
-          background: ${isDark ? '#4b5563' : '#9ca3af'};
+          background: ${isDark ? '#737373' : '#7c7c7c'};
         }
         
         /* Para Firefox */
         * {
           scrollbar-width: thin;
-          scrollbar-color: ${isDark ? '#374151 #1f2937' : '#d1d5db #f3f4f6'};
+          scrollbar-color: ${isDark ? '#525252 #262626' : '#a3a3a3 #f5f5f5'};
         }
       `}</style>
     </div>
