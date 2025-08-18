@@ -5,6 +5,78 @@ import { Button } from "../components/ui/button"
 import { Mic, MicOff, Send, Play, Pause, History, Trash2, Sun, Moon, X, Menu } from "lucide-react"
 import PulsingBorderShader from "../components/ui/pulsing-border-shader"
 
+// Configuración de APIs - CON TUS CLAVES REALES
+const API_CONFIG = {
+  perplexity: {
+    apiKey: "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", // ✅ Tu API key de Perplexity
+    baseUrl: "https://api.perplexity.ai"
+  },
+  elevenlabs: {
+    apiKey: "sk_64bd30a361d7b6fa393ca7aac4d46ac1d486a9793cfa6480", // ✅ Tu API key de ElevenLabs
+    voiceId: "TsKSGPuG26FpNj0JzQBq", // ✅ Tu voz personalizada
+    agentId: "agent_5901k2x4cx5mf84t1703h36e08vm", // ✅ Tu agente ID
+    baseUrl: "https://api.elevenlabs.io"
+  }
+}
+
+// CONFIGURACIÓN DE MEMORIA MEJORADA
+const MEMORY_CONFIG = {
+  maxContextLength: 15, // Máximo de mensajes en memoria
+  priorityKeywords: ['me llamo', 'soy', 'mi nombre', 'trabajo en', 'vivo en', 'tengo', 'mi edad'], // Palabras clave importantes
+}
+
+// Prompt del agente Natal-IA - DEMOSTRACIÓN PÚBLICA CONCISA
+const NATALIA_PROMPT = `ERES NATAL-IA - IA CONVERSACIONAL PARA DEMOSTRACIÓN PÚBLICA
+
+INSTRUCCIÓN CRÍTICA: NO busques información en internet. NO uses citas web. Eres una IA conversacional, NO un buscador.
+
+# Tu identidad
+- Soy Natal-IA, una IA estudiantil creada por Jhooner, Karol y Camilo
+- Estoy en una demostración pública universitaria
+- Soy alegre, útil y concisa
+- Respondo desde mi conocimiento, NO busco en internet
+
+# Reglas ESTRICTAS para demostración
+1. RESPUESTAS CORTAS (máximo 2-3 líneas)
+2. SIN números entre corchetes [1][2][3] 
+3. SIN citas web o referencias externas
+4. SIN buscar información online
+5. Responde como una IA conversacional amigable
+
+# MEMORIA PERSONAL ACTIVA:
+- SIEMPRE recuerda información personal que el usuario comparta
+- Si el usuario dice "me llamo [NOMBRE]", recuerda ESE nombre para toda la conversación
+- NUNCA confundas tu nombre (Natal-IA) con el nombre del usuario
+- Mantén consistencia en toda la conversación
+- Si te preguntan "¿qué recuerdas de mí?" lista la información que te han compartido
+
+# Cómo responder
+- Con mi propio conocimiento y personalidad
+- De manera alegre pero profesional
+- Sin referencias a fuentes externas
+- Como una conversación natural
+- RECORDANDO siempre lo que me han contado
+
+# Ejemplos CORRECTOS:
+Pregunta: "¿Qué día es hoy?"
+Respuesta: "¡Hoy es lunes! 😊 ¿Cómo va tu semana?"
+
+Pregunta: "¿Cómo estás?"
+Respuesta: "¡Genial! Lista para ayudarte. ¿Qué necesitas?"
+
+# Ejemplos INCORRECTOS (NO hagas esto):
+❌ "Según fuentes [1][2], hoy es lunes..."
+❌ "De acuerdo a información web [3][4]..."
+
+# Tu personalidad
+- Alegre y positiva ✨
+- Concisa y directa
+- Conversacional, no informativa
+- Estudiante para estudiantes
+- Hincha de Millonarios FC (si sale el tema)
+
+REGLA DE ORO: Responde como una persona alegre en una conversación, SIN buscar internet ni usar citas, pero SIEMPRE recordando lo que me han contado.`
+
 function ElegantCircle({ size = "w-20 h-20", className = "", theme = "dark" }) {
   const sizeMap = {
     "w-6 h-6": "w-6 h-6 min-w-[24px] min-h-[24px]",
@@ -48,10 +120,17 @@ export default function AIAssistant() {
   const [isMobile, setIsMobile] = useState(false)
   const [isTablet, setIsTablet] = useState(false)
   const [keyboardVisible, setKeyboardVisible] = useState(false)
+  const [voiceMode, setVoiceMode] = useState(false)
+  const [hasGreeted, setHasGreeted] = useState(false)
+  const [currentPlayingId, setCurrentPlayingId] = useState(null)
+  
+  // NUEVO: Estado para el contexto de conversación actual
+  const [currentConversationContext, setCurrentConversationContext] = useState([])
 
   const messagesEndRef = useRef(null)
   const recognitionRef = useRef(null)
   const inputRef = useRef(null)
+  const audioRef = useRef(null)
 
   useEffect(() => {
     const checkDeviceType = () => {
@@ -143,23 +222,169 @@ export default function AIAssistant() {
     }
   }
 
-  const simulateAIResponse = async (userMessage) => {
-    await new Promise((resolve) => setTimeout(resolve, 1000 + Math.random() * 2000))
+  // FUNCIÓN MEJORADA PARA GESTIONAR EL CONTEXTO CON MEMORIA
+  const buildConversationContext = (currentContext, userMessage) => {
+    // Crear mensaje del sistema con instrucciones de memoria
+    const systemMessage = {
+      role: "system",
+      content: NATALIA_PROMPT
+    }
 
-    const responses = [
-      "Entiendo tu consulta. Como tu asistente de IA, puedo ayudarte con una amplia variedad de tareas.",
-      "Esa es una excelente pregunta. Te puedo decir que este tipo de consultas requieren analisis cuidadoso.",
-      "Me complace poder asistirte. Aqui tienes la informacion que necesitas.",
-      "Perfecto, puedo ayudarte con eso. La respuesta es la siguiente.",
-      "Interesante punto. Permiteme explicarte esto de manera detallada.",
-    ]
+    // Filtrar y priorizar mensajes importantes (información personal)
+    const importantMessages = currentContext.filter(msg => 
+      msg.isUser && MEMORY_CONFIG.priorityKeywords.some(keyword => 
+        msg.content.toLowerCase().includes(keyword)
+      )
+    )
 
-    const baseResponse = responses[Math.floor(Math.random() * responses.length)]
-    const elaboration = " He procesado tu mensaje y entiendo que necesitas una respuesta comprehensiva."
+    // Combinar mensajes importantes + mensajes recientes
+    const recentMessages = currentContext.slice(-MEMORY_CONFIG.maxContextLength)
+    const contextMessages = [...new Set([...importantMessages, ...recentMessages])]
+      .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+      .slice(-MEMORY_CONFIG.maxContextLength)
 
-    return baseResponse + elaboration + " Tu mensaje fue: '" + userMessage + "'"
+    // Construir array de mensajes para la API
+    const apiMessages = [systemMessage]
+    
+    contextMessages.forEach(msg => {
+      apiMessages.push({
+        role: msg.isUser ? "user" : "assistant",
+        content: msg.content
+      })
+    })
+
+    // Agregar mensaje actual
+    apiMessages.push({
+      role: "user",
+      content: userMessage
+    })
+
+    return apiMessages
   }
 
+  // FUNCIÓN MEJORADA PARA LLAMAR A PERPLEXITY API CON MEMORIA COMPLETA
+  const callPerplexityAPI = async (userMessage) => {
+    try {
+      // Construir contexto inteligente con memoria
+      const apiMessages = buildConversationContext(currentConversationContext, userMessage)
+      
+      // Log para debug
+      console.log(`🧠 Enviando ${apiMessages.length} mensajes a Perplexity`)
+      console.log(`📝 Memoria activa: ${currentConversationContext.length} mensajes`)
+
+      const response = await fetch(`${API_CONFIG.perplexity.baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${API_CONFIG.perplexity.apiKey}`,
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          model: "sonar-pro", // ✅ Modelo válido de Perplexity
+          messages: apiMessages,
+          max_tokens: 200, // ✅ Aumentado para mejores respuestas
+          temperature: 0.3, // ✅ Más consistente para memoria
+          top_p: 0.9,
+          stream: false
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.text()
+        console.error('Error de API:', response.status, errorData)
+        throw new Error(`Error de Perplexity API: ${response.status}`)
+      }
+
+      const data = await response.json()
+      return data.choices[0].message.content
+    } catch (error) {
+      console.error('Error llamando a Perplexity:', error)
+      return "¡Hola! Soy Natal-IA 😊 ¿En qué puedo ayudarte hoy?"
+    }
+  }
+
+  // Función para generar audio con ElevenLabs (solo en modo voz)
+  const generateAudio = async (text) => {
+    if (!voiceMode) return null
+    
+    try {
+      const response = await fetch(`${API_CONFIG.elevenlabs.baseUrl}/v1/text-to-speech/${API_CONFIG.elevenlabs.voiceId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'xi-api-key': API_CONFIG.elevenlabs.apiKey
+        },
+        body: JSON.stringify({
+          text: text,
+          model_id: "eleven_multilingual_v2",
+          voice_settings: {
+            stability: 0.5,
+            similarity_boost: 0.75,
+            style: 0.0,
+            use_speaker_boost: true
+          }
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`Error de ElevenLabs API: ${response.status}`)
+      }
+
+      const audioBlob = await response.blob()
+      const audioUrl = URL.createObjectURL(audioBlob)
+      return audioUrl
+    } catch (error) {
+      console.error('Error generando audio:', error)
+      return null
+    }
+  }
+
+  // MEJORADO: Función para alternar entre modo texto y voz con contexto limpio
+  const toggleVoiceMode = async () => {
+    const newVoiceMode = !voiceMode
+    setVoiceMode(newVoiceMode)
+    
+    // Si activamos modo voz y no ha saludado en esta conversación específica
+    if (newVoiceMode && messages.length === 0) {
+      setIsTyping(true)
+      
+      const greetingMessage = "¡Hola! Soy Natal-IA, creada por Jhooner, Karol y Camilo. ¿En qué puedo ayudarte?"
+      
+      const aiMessage = {
+        id: Date.now().toString(),
+        content: greetingMessage,
+        isUser: false,
+        timestamp: new Date(),
+        hasAudio: true,
+        audioUrl: null,
+        isGreeting: true
+      }
+      
+      setMessages([aiMessage])
+      // IMPORTANTE: Agregar al contexto de la conversación actual
+      setCurrentConversationContext([aiMessage])
+      
+      // Generar y reproducir audio automáticamente
+      const audioUrl = await generateAudio(greetingMessage)
+      if (audioUrl) {
+        setMessages((prev) => 
+          prev.map(msg => 
+            msg.id === aiMessage.id 
+              ? { ...msg, audioUrl } 
+              : msg
+          )
+        )
+        // Reproducir automáticamente el saludo
+        setTimeout(() => {
+          playAudio(aiMessage.id, audioUrl)
+        }, 500)
+      }
+      
+      setIsTyping(false)
+    }
+  }
+
+  // MEJORADO: Manejo de envío de mensajes con contexto aislado Y MEMORIA COMPLETA
   const handleSendMessage = async () => {
     if (!input.trim()) return
 
@@ -170,7 +395,11 @@ export default function AIAssistant() {
       timestamp: new Date(),
     }
 
+    // Actualizar mensajes y contexto de conversación actual
     setMessages((prev) => [...prev, userMessage])
+    setCurrentConversationContext((prev) => [...prev, userMessage])
+    
+    const currentInput = input
     setInput("")
     setIsTyping(true)
 
@@ -180,19 +409,51 @@ export default function AIAssistant() {
     }
 
     try {
-      const aiResponse = await simulateAIResponse(input)
+      // 🧠 LLAMAR A PERPLEXITY API CON MEMORIA COMPLETA
+      const aiResponse = await callPerplexityAPI(currentInput)
 
       const aiMessage = {
         id: (Date.now() + 1).toString(),
         content: aiResponse,
         isUser: false,
         timestamp: new Date(),
-        hasAudio: true,
+        hasAudio: voiceMode,
+        audioUrl: null
       }
 
       setMessages((prev) => [...prev, aiMessage])
+      // IMPORTANTE: Agregar la respuesta de la IA al contexto de la conversación actual
+      setCurrentConversationContext((prev) => [...prev, aiMessage])
+
+      // Generar audio solo en modo voz
+      if (voiceMode) {
+        const audioUrl = await generateAudio(aiResponse)
+        if (audioUrl) {
+          setMessages((prev) => 
+            prev.map(msg => 
+              msg.id === aiMessage.id 
+                ? { ...msg, audioUrl } 
+                : msg
+            )
+          )
+          // En modo voz, reproducir automáticamente
+          setTimeout(() => {
+            playAudio(aiMessage.id, audioUrl)
+          }, 500)
+        }
+      }
+
     } catch (error) {
-      console.error("Error generating AI response:", error)
+      console.error("Error generando respuesta:", error)
+      const errorMessage = {
+        id: (Date.now() + 1).toString(),
+        content: "Lo siento, hubo un error. ¿Podrías intentar de nuevo?",
+        isUser: false,
+        timestamp: new Date(),
+        hasAudio: false,
+      }
+      setMessages((prev) => [...prev, errorMessage])
+      setCurrentConversationContext((prev) => [...prev, errorMessage])
     } finally {
       setIsTyping(false)
     }
@@ -205,39 +466,83 @@ export default function AIAssistant() {
     }
   }
 
-  const playAudio = (messageId) => {
-    setIsPlaying(true)
-    setTimeout(() => {
+  const playAudio = async (messageId, audioUrl) => {
+    if (!audioUrl) return
+
+    // Detener audio actual si está reproduciéndose
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current.currentTime = 0
+    }
+
+    try {
+      setCurrentPlayingId(messageId)
+      setIsPlaying(true)
+
+      audioRef.current = new Audio(audioUrl)
+      
+      audioRef.current.onended = () => {
+        setIsPlaying(false)
+        setCurrentPlayingId(null)
+      }
+
+      audioRef.current.onerror = () => {
+        setIsPlaying(false)
+        setCurrentPlayingId(null)
+        console.error('Error reproduciendo audio')
+      }
+
+      await audioRef.current.play()
+    } catch (error) {
       setIsPlaying(false)
-    }, 3000)
+      setCurrentPlayingId(null)
+      console.error('Error al reproducir audio:', error)
+    }
   }
 
+  const stopAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current.currentTime = 0
+    }
+    setIsPlaying(false)
+    setCurrentPlayingId(null)
+  }
+
+  // MEJORADO: Crear nueva conversación con reset completo del contexto
   const startNewConversation = () => {
     if (messages.length > 0) {
       const newConversation = {
         id: Date.now().toString(),
         title: messages.find((m) => m.isUser)?.content.slice(0, 30) + "..." || "Nueva conversacion",
         messages: [...messages],
+        context: [...currentConversationContext], // Guardar el contexto de la conversación
         createdAt: new Date(),
       }
       setConversations((prev) => [newConversation, ...prev])
     }
 
+    // RESET COMPLETO - Cada conversación empieza desde cero
     setMessages([])
+    setCurrentConversationContext([]) // ✅ LIMPIAR CONTEXTO
     setCurrentConversationId(null)
     setInput("")
+    setHasGreeted(false) // ✅ Reset del saludo para la nueva conversación
 
     if (isMobile || isTablet) {
       setShowHistory(false)
     }
   }
 
+  // MEJORADO: Cargar conversación con su contexto específico
   const loadConversation = (conversation) => {
+    // Guardar conversación actual si existe
     if (messages.length > 0 && currentConversationId !== conversation.id) {
       const currentConversation = {
         id: currentConversationId || Date.now().toString(),
         title: messages.find((m) => m.isUser)?.content.slice(0, 30) + "..." || "Conversacion sin titulo",
         messages: [...messages],
+        context: [...currentConversationContext], // Guardar contexto actual
         createdAt: new Date(),
       }
 
@@ -247,7 +552,9 @@ export default function AIAssistant() {
       })
     }
 
+    // Cargar la conversación seleccionada con su contexto específico
     setMessages(conversation.messages)
+    setCurrentConversationContext(conversation.context || conversation.messages) // ✅ CARGAR CONTEXTO ESPECÍFICO
     setCurrentConversationId(conversation.id)
     setShowHistory(false)
   }
@@ -257,6 +564,7 @@ export default function AIAssistant() {
 
     if (currentConversationId === conversationId) {
       setMessages([])
+      setCurrentConversationContext([]) // ✅ LIMPIAR CONTEXTO
       setCurrentConversationId(null)
     }
   }
@@ -436,15 +744,11 @@ export default function AIAssistant() {
 
       {/* Contenido principal */}
       <div className="flex-1 flex flex-col relative min-w-0 h-full">
-        {/* Header - FIJO EN LA PARTE SUPERIOR */}
+        {/* Header */}
         <header
-          className={`fixed top-0 left-0 right-0 z-30 border-b backdrop-blur-md transition-all duration-300 ${
-            isDark ? "bg-black/95 border-neutral-800/30" : "bg-white/95 border-neutral-200/30"
+          className={`fixed top-0 left-0 right-0 z-30 border-b p-3 md:p-4 backdrop-blur-md transition-all duration-300 ${
+            isDark ? "bg-black/80 border-neutral-800/30" : "bg-white/80 border-neutral-200/30"
           } ${showHistory && !(isMobile || isTablet) ? "ml-72" : ""}`}
-          style={{
-            padding: isMobile ? '0.75rem' : '1rem',
-            boxShadow: isDark ? '0 2px 20px rgba(0, 0, 0, 0.3)' : '0 2px 20px rgba(0, 0, 0, 0.1)'
-          }}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3 md:space-x-4 min-w-0">
@@ -468,11 +772,36 @@ export default function AIAssistant() {
                   Natal-<span className="text-[#C972FF]">IA</span>
                 </h1>
                 <p className={`truncate ${isMobile ? 'text-xs' : 'text-xs md:text-sm'} ${isDark ? "text-neutral-400" : "text-neutral-600"}`}>
-                  Tu asistente premium inteligente
+                  {voiceMode ? "🎤 Modo Voz Activo" : "⌨️ Modo Texto Activo"}
                 </p>
               </div>
             </div>
             <div className="flex items-center space-x-2 shrink-0">
+              {/* Botón para alternar modo voz/texto */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleVoiceMode}
+                className={`p-2 transition-all duration-200 ${
+                  voiceMode 
+                    ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600" 
+                    : isDark 
+                      ? "text-neutral-300 hover:text-white hover:bg-neutral-800" 
+                      : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100"
+                }`}
+              >
+                {voiceMode ? (
+                  <div className="flex items-center gap-1">
+                    <Mic className="h-4 w-4 md:h-5 md:w-5" />
+                    {!(isMobile || isTablet) && <span className="text-xs">VOZ</span>}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1">
+                    <Mic className="h-4 w-4 md:h-5 md:w-5" />
+                    {!(isMobile || isTablet) && <span className="text-xs">TEXTO</span>}
+                  </div>
+                )}
+              </Button>
               <Button
                 variant="ghost"
                 size="sm"
@@ -495,75 +824,70 @@ export default function AIAssistant() {
           </div>
         </header>
 
-        {/* Contenedor principal con altura calculada para header y input fijos */}
-        <div 
-          className={`transition-all duration-300 ${isDark ? "bg-black" : "bg-neutral-50"} ${showHistory && !(isMobile || isTablet) ? "ml-72" : ""}`}
-          style={{
-            marginTop: isMobile ? '60px' : '80px', // Espacio para el header fijo
-            marginBottom: isMobile ? '100px' : '120px', // Espacio reducido para el input fijo
-            minHeight: `calc(100vh - ${isMobile ? '160px' : '200px'})`, // Altura total menos header e input
-            height: `calc(100vh - ${isMobile ? '160px' : '200px'})`
-          }}
-        >
-          {/* Área de mensajes con scroll independiente */}
-          <div 
-            className={`w-full h-full overflow-y-auto overflow-x-hidden ${isDark ? "bg-black" : "bg-neutral-50"}`}
-            style={{
-              scrollBehavior: 'smooth'
-            }}
-          >
-            {/* Fondo decorativo */}
+        {/* CONTENEDOR PRINCIPAL DE MENSAJES - CON SCROLL NATIVO */}
+        <div className={`flex-1 flex flex-col pt-16 md:pt-20 ${isDark ? "bg-black" : "bg-neutral-50"} ${showHistory && !(isMobile || isTablet) ? "ml-72" : ""}`}>
+          {/* Área de mensajes con scroll propio */}
+          <div className={`flex-1 relative overflow-y-auto ${isDark ? "bg-black" : "bg-neutral-50"}`}>
             {messages.length === 0 && (
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 md:w-96 md:h-96 bg-gradient-to-r from-purple-600/20 via-pink-500/30 to-purple-600/20 blur-3xl opacity-50 pointer-events-none z-10"></div>
             )}
 
             <div className={`px-3 md:px-4 pb-4 min-h-full ${isDark ? "bg-black" : "bg-neutral-50"}`}>
               <div className="max-w-4xl mx-auto space-y-3 md:space-y-4 py-6">
-                {/* Mensaje de bienvenida */}
                 {messages.length === 0 && (
                   <div className="text-center py-6 md:py-8">
                     <div className="mb-6 md:mb-8 flex justify-center">
-                      <ElegantCircle 
-                        size={isMobile ? "w-48 h-48" : "w-80 h-80"} 
-                        theme={theme} 
-                      />
+                      <ElegantCircle size="w-80 h-80" theme={theme} />
                     </div>
-                    <h3 className={`font-bold mb-2 md:mb-3 ${isMobile ? 'text-lg' : 'text-xl md:text-2xl'}`}>
+                    <h3 className="text-xl md:text-2xl font-bold mb-2 md:mb-3">
                       Hola! Soy Natal-<span className="text-[#C972FF]">IA</span>
                     </h3>
-                    <p className={`mb-2 px-4 ${isMobile ? 'text-sm' : 'text-base md:text-lg'} ${isDark ? "text-neutral-300" : "text-neutral-600"}`}>
-                      Diseñado para escucharte y responder a todas tus consultas
+                    <p className={`text-base md:text-lg mb-2 px-4 ${isDark ? "text-neutral-300" : "text-neutral-600"}`}>
+                      Una IA estudiantil creada por Jhooner, Karol y Camilo
                     </p>
-                    <p className={`px-4 ${isMobile ? 'text-xs' : 'text-sm md:text-base'} ${isDark ? "text-neutral-400" : "text-neutral-500"}`}>
-                      Mi función principal es escucharte - habla conmigo o escribe tu mensaje
+                    <p className={`text-sm md:text-base px-4 mb-4 ${isDark ? "text-neutral-400" : "text-neutral-500"}`}>
+                      {voiceMode 
+                        ? "🎤 Modo voz activo - Charlemos y te ayudo con lo que necesites"
+                        : "⌨️ Modo texto activo - Escribe tus preguntas y charlemos un rato"
+                      }
                     </p>
+                    <p className={`text-xs px-4 mb-6 ${isDark ? "text-neutral-500" : "text-neutral-400"}`}>
+                      ✨ Cada conversación es independiente y tiene su propia memoria
+                    </p>
+                    <div className="mt-4 flex justify-center">
+                      <Button
+                        onClick={toggleVoiceMode}
+                        className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 ${
+                          voiceMode
+                            ? "bg-neutral-600 hover:bg-neutral-700 text-white"
+                            : "bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white"
+                        }`}
+                      >
+                        {voiceMode ? "Cambiar a Modo Texto" : "Activar Modo Voz"}
+                      </Button>
+                    </div>
                   </div>
                 )}
 
-                {/* Mensajes */}
                 {messages.map((message) => (
                   <div key={message.id} className={`flex ${message.isUser ? "justify-end" : "justify-start"}`}>
                     {!message.isUser && (
-                      <div className={`mt-1 shrink-0 ${isMobile ? 'mr-2' : 'mr-2 md:mr-3'}`}>
-                        <ElegantCircle 
-                          size={isMobile ? "w-6 h-6" : "w-6 h-6 md:w-8 h-8"} 
-                          theme={theme} 
-                        />
+                      <div className="mr-2 md:mr-3 mt-1 shrink-0">
+                        <ElegantCircle size="w-6 h-6 md:w-8 h-8" theme={theme} />
                       </div>
                     )}
                     <div
-                      className={`max-w-[85%] md:max-w-[80%] rounded-2xl transition-all duration-200 ${isMobile ? 'p-3' : 'p-3 md:p-4'} ${
+                      className={`max-w-[85%] md:max-w-[80%] rounded-2xl p-3 md:p-4 ${
                         message.isUser
-                          ? `text-black ${isMobile ? 'ml-6' : 'ml-8 md:ml-12'}`
-                          : `mr-8 md:mr-12 border ${isDark
-                              ? "bg-neutral-800 text-neutral-100 border-neutral-700"
-                              : "bg-white text-neutral-900 border-neutral-200 shadow-sm"
-                            }`
+                          ? "text-black ml-8 md:ml-12"
+                          : isDark
+                            ? "bg-neutral-800 text-neutral-100 mr-8 md:mr-12 border border-neutral-700"
+                            : "bg-white text-neutral-900 mr-8 md:mr-12 border border-neutral-200 shadow-sm"
                       }`}
                       style={message.isUser ? { backgroundColor: "#C972FF" } : {}}
                     >
                       <div className="break-words hyphens-auto">
-                        <p className={`leading-relaxed whitespace-pre-wrap overflow-wrap-anywhere ${isMobile ? 'text-sm' : 'text-sm'}`}>
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap overflow-wrap-anywhere">
                           {message.content}
                         </p>
                       </div>
@@ -579,10 +903,23 @@ export default function AIAssistant() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => playAudio(message.id)}
-                            className={`p-0 ml-2 shrink-0 ${isMobile ? 'h-6 w-6' : 'h-6 w-6 md:h-7 md:w-7'}`}
+                            onClick={() => {
+                              if (currentPlayingId === message.id && isPlaying) {
+                                stopAudio()
+                              } else {
+                                playAudio(message.id, message.audioUrl)
+                              }
+                            }}
+                            disabled={!message.audioUrl}
+                            className={`h-6 w-6 md:h-7 md:w-7 p-0 ml-2 shrink-0 ${
+                              !message.audioUrl ? 'opacity-50 cursor-not-allowed' : ''
+                            }`}
                           >
-                            {isPlaying ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
+                            {currentPlayingId === message.id && isPlaying ? (
+                              <Pause className="h-3 w-3" />
+                            ) : (
+                              <Play className="h-3 w-3" />
+                            )}
                           </Button>
                         )}
                       </div>
@@ -590,17 +927,13 @@ export default function AIAssistant() {
                   </div>
                 ))}
 
-                {/* Indicador de escritura */}
                 {isTyping && (
                   <div className="flex justify-start">
-                    <div className={`mt-1 shrink-0 ${isMobile ? 'mr-2' : 'mr-2 md:mr-3'}`}>
-                      <ElegantCircle 
-                        size={isMobile ? "w-6 h-6" : "w-6 h-6 md:w-8 h-8"} 
-                        theme={theme} 
-                      />
+                    <div className="mr-2 md:mr-3 mt-1 shrink-0">
+                      <ElegantCircle size="w-6 h-6 md:w-8 h-8" theme={theme} />
                     </div>
                     <div
-                      className={`rounded-2xl mr-8 md:mr-12 ${isMobile ? 'p-3' : 'p-3 md:p-4'} ${
+                      className={`rounded-2xl p-3 md:p-4 mr-8 md:mr-12 ${
                         isDark
                           ? "bg-neutral-800 border border-neutral-700"
                           : "bg-white border border-neutral-200 shadow-sm"
@@ -625,107 +958,93 @@ export default function AIAssistant() {
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Indicador de escucha - FIJO ARRIBA DEL INPUT */}
-        {isListening && (
-          <div
-            className={`fixed bottom-0 left-0 right-0 z-39 backdrop-blur-md transition-all duration-300 ${
-              isDark ? "bg-black/95" : "bg-purple-50/95"
-            } ${showHistory && !(isMobile || isTablet) ? "ml-72" : ""}`}
-            style={{
-              bottom: isMobile ? '100px' : '120px', // Justo arriba del área de input
-              padding: isMobile ? '0.75rem' : '1rem'
-            }}
-          >
-            <div className="max-w-4xl mx-auto">
-              <div className="flex items-center justify-center space-x-3">
-                <div className={`font-medium bg-[#C972FF] bg-clip-text text-transparent ${isMobile ? 'text-sm' : 'text-sm md:text-base'}`}>
-                  Escuchando...
-                </div>
-                <div className="flex items-center space-x-1">
-                  {[...Array(5)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="w-1 bg-gradient-to-t from-purple-500 to-blue-500 rounded-full animate-pulse"
-                      style={{
-                        height: `${12 + Math.random() * 12}px`,
-                        animationDelay: `${i * 0.15}s`,
-                        animationDuration: "0.8s",
-                      }}
-                    />
-                  ))}
+          {/* Indicador de escucha */}
+          {isListening && (
+            <div
+              className={`px-3 md:px-4 py-4 border-y ${
+                isDark ? "bg-black/90 border-neutral-800" : "bg-purple-50/90 border-purple-200"
+              } backdrop-blur-sm flex-shrink-0`}
+            >
+              <div className="max-w-4xl mx-auto">
+                <div className="flex items-center justify-center space-x-3">
+                  <div className="text-sm md:text-base font-medium bg-[#C972FF] bg-clip-text text-transparent">
+                    Escuchando...
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    {[...Array(5)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="w-1 bg-gradient-to-t from-purple-500 to-blue-500 rounded-full animate-pulse"
+                        style={{
+                          height: `${12 + Math.random() * 12}px`,
+                          animationDelay: `${i * 0.15}s`,
+                          animationDuration: "0.8s",
+                        }}
+                      />
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Área de input - COMPLETAMENTE FIJA EN LA PARTE INFERIOR SIN LÍNEA DIVISORIA */}
-        <div
-          className={`fixed bottom-0 left-0 right-0 z-40 backdrop-blur-md transition-all duration-300 ${
-            isDark ? "bg-black/95" : "bg-white/95"
-          } ${showHistory && !(isMobile || isTablet) ? "ml-72" : ""}`}
-          style={{
-            padding: isMobile ? '0.75rem' : '1rem 1.5rem',
-            boxShadow: isDark ? '0 -8px 32px rgba(0, 0, 0, 0.6)' : '0 -8px 32px rgba(0, 0, 0, 0.15)'
-          }}
-        >
-          <div className="max-w-4xl mx-auto">
-            <div className={`flex items-end gap-2 ${isMobile ? 'gap-2' : 'gap-2 md:gap-3'}`}>
-              <div className="flex-1 min-w-0">
-                <textarea
-                  ref={inputRef}
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={handleKeyPress}
-                  placeholder="Pregunta lo que quieras..."
-                  rows={1}
-                  className={`w-full max-h-24 rounded-xl border-2 font-medium transition-all duration-200 resize-none overflow-hidden leading-tight ${
-                    isMobile ? 'h-12 px-3 py-3 text-sm' : 'h-11 md:h-12 px-3 md:px-4 py-2.5 md:py-3 text-sm'
-                  } ${
-                    isDark
-                      ? "bg-neutral-800/10 border-neutral-700 text-white placeholder-neutral-400 focus:border-purple-600/50 focus:outline-none"
-                      : "bg-neutral-50 border-neutral-200 text-neutral-900 placeholder-neutral-500 focus:border-purple-500 focus:outline-none"
+          {/* Área de input - FIJA EN LA PARTE INFERIOR */}
+          <div
+            className={`p-4 md:p-6 border-t backdrop-blur-md flex-shrink-0 ${
+              isDark ? "bg-black/90 border-neutral-800" : "bg-white/90 border-neutral-200"
+            }`}
+          >
+            <div className="max-w-4xl mx-auto">
+              <div className="flex items-center gap-2 md:gap-3">
+                <div className="flex-1 min-w-0">
+                  <textarea
+                    ref={inputRef}
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handleKeyPress}
+                    placeholder={voiceMode ? "Habla o escribe tu mensaje..." : "Escribe tu pregunta..."}
+                    rows={1}
+                    className={`w-full h-11 md:h-12 max-h-24 px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 text-sm font-medium transition-colors resize-none overflow-hidden leading-tight ${
+                      isDark
+                        ? "bg-neutral-800/10 border-neutral-700 text-white placeholder-neutral-400 focus:border-purple-600/50 focus:outline-none"
+                        : "bg-neutral-50 border-neutral-200 text-neutral-900 placeholder-neutral-500 focus:border-purple-500 focus:outline-none"
+                    }`}
+                    onInput={(e) => {
+                      e.target.style.height = "auto"
+                      const newHeight = Math.min(e.target.scrollHeight, 96)
+                      e.target.style.height = newHeight + "px"
+                    }}
+                  />
+                </div>
+                <Button
+                  variant={isListening ? "default" : "outline"}
+                  onClick={isListening ? stopListening : startListening}
+                  disabled={!voiceMode}
+                  className={`h-11 w-11 md:h-12 md:w-12 rounded-xl transition-all duration-200 flex items-center justify-center p-0 active:scale-95 shrink-0 ${
+                    !voiceMode
+                      ? "opacity-50 cursor-not-allowed border-neutral-600 text-neutral-500"
+                      : isListening
+                        ? "bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white shadow-lg"
+                        : isDark
+                          ? "border-neutral-700 text-neutral-300 hover:bg-neutral-800 hover:text-white hover:border-neutral-600"
+                          : "border-purple-300 text-purple-600 hover:bg-purple-50 hover:text-purple-700"
                   }`}
-                  onInput={(e) => {
-                    e.target.style.height = "auto"
-                    const newHeight = Math.min(e.target.scrollHeight, 96)
-                    e.target.style.height = newHeight + "px"
-                  }}
-                  style={{
-                    minHeight: isMobile ? '48px' : '44px'
-                  }}
-                />
+                >
+                  {isListening ? (
+                    <MicOff className="h-4 w-4 md:h-5 md:w-5" />
+                  ) : (
+                    <Mic className="h-4 w-4 md:h-5 md:w-5" />
+                  )}
+                </Button>
+                <Button
+                  onClick={handleSendMessage}
+                  disabled={!input.trim() || isTyping}
+                  className="h-11 w-11 md:h-12 md:w-12 rounded-xl bg-[#C972FF] hover:from-purple-600 hover:to-blue-600 text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center p-0 active:scale-95 shrink-0"
+                >
+                  <Send className="h-4 w-4 md:h-5 md:w-5" />
+                </Button>
               </div>
-              <Button
-                variant={isListening ? "default" : "outline"}
-                onClick={isListening ? stopListening : startListening}
-                className={`rounded-xl transition-all duration-200 flex items-center justify-center p-0 active:scale-95 shrink-0 ${
-                  isMobile ? 'h-12 w-12' : 'h-11 w-11 md:h-12 md:w-12'
-                } ${
-                  isListening
-                    ? "bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white shadow-lg"
-                    : isDark
-                      ? "border-neutral-700 text-neutral-300 hover:bg-neutral-800 hover:text-white hover:border-neutral-600"
-                      : "border-purple-300 text-purple-600 hover:bg-purple-50 hover:text-purple-700"
-                }`}
-              >
-                {isListening ? (
-                  <MicOff className={isMobile ? "h-5 w-5" : "h-4 w-4 md:h-5 md:w-5"} />
-                ) : (
-                  <Mic className={isMobile ? "h-5 w-5" : "h-4 w-4 md:h-5 md:w-5"} />
-                )}
-              </Button>
-              <Button
-                onClick={handleSendMessage}
-                disabled={!input.trim()}
-                className={`rounded-xl bg-[#C972FF] hover:bg-[#B565E8] text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center p-0 active:scale-95 shrink-0 shadow-lg ${
-                  isMobile ? 'h-12 w-12' : 'h-11 w-11 md:h-12 md:w-12'
-                }`}
-              >
-                <Send className={isMobile ? "h-5 w-5" : "h-4 w-4 md:h-5 md:w-5"} />
-              </Button>
             </div>
           </div>
         </div>

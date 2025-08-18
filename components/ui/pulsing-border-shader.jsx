@@ -27,7 +27,7 @@ export default function PulsingBorderShader({ size = "w-20 h-20", theme = "dark"
       thickness={theme === "dark" ? 0.05 : 0.05}
       softness={0.1}
       intensity={theme === "dark" ? 2 : 2}
-      spotsPerColor={4}
+      spotspercolor={4}
       spotSize={0.1}
       pulse={theme === "dark" ? 0.4 : 0.4}
       smoke={0.5}
