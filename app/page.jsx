@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { Button } from "../components/ui/button"
-import { Mic, MicOff, Send, Play, Pause, History, Trash2, Sun, Moon, X, Menu } from "lucide-react"
+import { Mic, MicOff, Send, Play, Pause, History, Trash2, Sun, Moon, X, Menu, Search } from "lucide-react"
 import PulsingBorderShader from "../components/ui/pulsing-border-shader"
 
 // Configuración de APIs - CON TUS CLAVES REALES
@@ -123,6 +123,9 @@ export default function AIAssistant() {
   const [voiceMode, setVoiceMode] = useState(false)
   const [hasGreeted, setHasGreeted] = useState(false)
   const [currentPlayingId, setCurrentPlayingId] = useState(null)
+  
+  // NUEVO: Estado para el buscador de conversaciones
+  const [searchQuery, setSearchQuery] = useState("")
   
   // NUEVO: Estado para el contexto de conversación actual
   const [currentConversationContext, setCurrentConversationContext] = useState([])
@@ -581,6 +584,11 @@ export default function AIAssistant() {
     setTheme(theme === "light" ? "dark" : "light")
   }
 
+  // NUEVO: Función para filtrar conversaciones basado en la búsqueda
+  const filteredConversations = conversations.filter(conversation =>
+    conversation.title.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
   const isDark = theme === "dark"
 
   return (
@@ -652,12 +660,32 @@ export default function AIAssistant() {
               )}
             </div>
           </div>
+
+          {/* NUEVO: Buscador de conversaciones */}
+          <div className="mt-3">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className={`h-4 w-4 ${isDark ? "text-neutral-400" : "text-neutral-500"}`} />
+              </div>
+              <input
+                type="text"
+                placeholder="Buscar conversaciones..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={`w-full pl-10 pr-3 py-2 text-sm rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500/50 ${
+                  isDark
+                    ? "bg-neutral-800/50 border-neutral-700 text-white placeholder-neutral-400 focus:bg-neutral-800/70"
+                    : "bg-white/70 border-neutral-200 text-neutral-900 placeholder-neutral-500 focus:bg-white"
+                }`}
+              />
+            </div>
+          </div>
         </div>
 
         {/* Contenido del historial */}
         <div className={`flex-1 overflow-y-auto p-3 ${isDark ? "bg-black/95" : "bg-white/95"}`}>
           <div className="space-y-2 pr-2">
-            {conversations.map((conversation) => (
+            {filteredConversations.map((conversation) => (
               <div key={conversation.id} className="group">
                 <div
                   className={`relative p-3 cursor-pointer transition-all duration-200 rounded-xl border ${
@@ -733,6 +761,19 @@ export default function AIAssistant() {
                 </div>
               </div>
             ))}
+            {filteredConversations.length === 0 && conversations.length > 0 && (
+              <div className={`text-center py-8 ${isDark ? "text-neutral-400" : "text-neutral-500"}`}>
+                <div
+                  className={`w-12 h-12 mx-auto mb-3 rounded-lg flex items-center justify-center ${
+                    isDark ? "bg-neutral-800/50" : "bg-neutral-200/50"
+                  }`}
+                >
+                  <Search className="w-6 h-6" />
+                </div>
+                <p className="text-xs font-medium mb-1">No se encontraron conversaciones</p>
+                <p className="text-xs opacity-75">Intenta con otros términos de búsqueda</p>
+              </div>
+            )}
             {conversations.length === 0 && (
               <div className={`text-center py-8 ${isDark ? "text-neutral-400" : "text-neutral-500"}`}>
                 <div
@@ -779,9 +820,6 @@ export default function AIAssistant() {
                 <h1 className={`font-bold truncate ${isMobile ? 'text-lg' : 'text-xl md:text-2xl'}`}>
                   Natal-<span className="text-[#C972FF]">IA</span>
                 </h1>
-                <p className={`truncate ${isMobile ? 'text-xs' : 'text-xs md:text-sm'} ${isDark ? "text-neutral-400" : "text-neutral-600"}`}>
-                  {voiceMode ? "🎤 Modo Voz Activo" : "⌨️ Modo Texto Activo"}
-                </p>
               </div>
             </div>
             <div className="flex items-center space-x-2 shrink-0">
@@ -862,14 +900,9 @@ export default function AIAssistant() {
                       Hola! Soy Natal-<span className="text-[#C972FF]">IA</span>
                     </h3>
                     <p className={`text-base md:text-lg mb-2 px-4 ${isDark ? "text-neutral-300" : "text-neutral-600"}`}>
-                      Una IA estudiantil creada por Jhooner, Karol y Camilo
+                      Una IA estudiantil creada por Jhooner, Karol y Camilo 
                     </p>
-                    <p className={`text-sm md:text-base px-4 mb-4 ${isDark ? "text-neutral-400" : "text-neutral-500"}`}>
-                      {voiceMode 
-                        ? "🎤 Modo voz activo - Charlemos y te ayudo con lo que necesites"
-                        : "Está el modo texto activo - Escribe tus preguntas y charlemos un rato"
-                      }
-                    </p>
+                    <p>Escribe tus preguntas y charlemos un rato</p>
                     
                    {/* <div className="mt-4 flex justify-center">
                       <Button
