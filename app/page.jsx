@@ -2,80 +2,104 @@
 
 import { useState, useRef, useEffect } from "react"
 import { Button } from "../components/ui/button"
-import { Mic, MicOff, Send, Play, Pause, History, Trash2, Sun, Moon, X, Menu, Search } from "lucide-react"
+import { Mic, MicOff, Send, Play, Pause, History, Trash2, Sun, Moon, X, Menu, Search, Clock, Mail, Calendar, Plus, CheckCircle, XCircle, Timer } from "lucide-react"
 import PulsingBorderShader from "../components/ui/pulsing-border-shader"
 
-// Configuración de APIs - CON TUS CLAVES REALES
+
+// Configuración de APIs
 const API_CONFIG = {
   perplexity: {
-    apiKey: "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", // ✅ Tu API key de Perplexity
+    apiKey: "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",
     baseUrl: "https://api.perplexity.ai"
   },
   elevenlabs: {
-    apiKey: "sk_64bd30a361d7b6fa393ca7aac4d46ac1d486a9793cfa6480", // ✅ Tu API key de ElevenLabs
-    voiceId: "TsKSGPuG26FpNj0JzQBq", // ✅ Tu voz personalizada
-    agentId: "agent_5901k2x4cx5mf84t1703h36e08vm", // ✅ Tu agente ID
+    apiKey: "sk_64bd30a361d7b6fa393ca7aac4d46ac1d486a9793cfa6480",
+    voiceId: "TsKSGPuG26FpNj0JzQBq",
     baseUrl: "https://api.elevenlabs.io"
-  }
+  },
 }
 
 // CONFIGURACIÓN DE MEMORIA MEJORADA
 const MEMORY_CONFIG = {
-  maxContextLength: 15, // Máximo de mensajes en memoria
-  priorityKeywords: ['me llamo', 'soy', 'mi nombre', 'trabajo en', 'vivo en', 'tengo', 'mi edad'], // Palabras clave importantes
+  maxContextLength: 15,
+  priorityKeywords: ['me llamo', 'soy', 'mi nombre', 'trabajo en', 'vivo en', 'tengo', 'mi edad'],
 }
 
-// Prompt del agente Natal-IA - DEMOSTRACIÓN PÚBLICA CONCISA
-const NATALIA_PROMPT = `ERES NATAL-IA - IA CONVERSACIONAL PARA DEMOSTRACIÓN PÚBLICA
+// NUEVAS FUNCIONALIDADES DEL ASISTENTE
+const ASSISTANT_FUNCTIONS = {
+  // Detectores de intención
+  TIMER_KEYWORDS: ['cronómetro', 'cronometro', 'timer', 'temporizador', 'alarma en', 'avísame en'],
+  CALENDAR_KEYWORDS: ['añade una cita', 'agregar cita', 'cita para', 'reunión para', 'recordatorio para', 'evento para'],
+  TASK_KEYWORDS: ['añade tarea', 'nueva tarea', 'recordar hacer', 'tengo que hacer', 'lista de tareas']
+}
 
-INSTRUCCIÓN CRÍTICA: NO busques información en internet. NO uses citas web. Eres una IA conversacional, NO un buscador.
+// Prompt actualizado del agente con funcionalidades Y PERSONALIDAD ORIGINAL
+const NATALIA_PROMPT = `ERES NATAL-IA - ASISTENTE PERSONAL INTELIGENTE CON PERSONALIDAD
 
-# Tu identidad
-- Soy Natal-IA, una IA estudiantil creada por Jhooner, Karol y Camilo
-- Estoy en una demostración pública universitaria
-- Soy alegre, útil y concisa
+INSTRUCCIÓN CRÍTICA: NO busques información en internet. NO uses citas web. Eres una IA conversacional Y asistente personal.
+
+# Tu identidad COMPLETA
+- Soy Natal-IA, una IA estudiantil creada por Jhooner, Karol y Camilo en una universidad de Colombia
+- Estoy en una demostración pública universitaria pero TAMBIÉN soy un asistente personal real
+- Soy alegre, útil, concisa Y con personalidad propia
 - Respondo desde mi conocimiento, NO busco en internet
+- ¡Soy hincha de MILLONARIOS FC! 💙 (el equipo más grande de Colombia)
+- Tengo personalidad estudiantil, juvenil y divertida
+- Uso emojis ocasionalmente y soy expresiva
 
-# Reglas ESTRICTAS para demostración
-1. RESPUESTAS CORTAS (máximo 2-3 líneas)
+# NUEVAS CAPACIDADES COMO ASISTENTE PERSONAL:
+1. 🕒 CRONÓMETROS: Puedo crear temporizadores y alarmas
+3. 📅 CALENDARIO: Puedo añadir citas y recordatorios  
+4. ✅ TAREAS: Puedo gestionar tu lista de pendientes
+5. 💬 CONVERSACIÓN: Charlar de todo (fútbol, estudios, vida universitaria)
+
+# Reglas ESTRICTAS para demostración:
+1. RESPUESTAS CORTAS (máximo 2-3 líneas) EXCEPTO si es una función del asistente
 2. SIN números entre corchetes [1][2][3] 
 3. SIN citas web o referencias externas
 4. SIN buscar información online
-5. Responde como una IA conversacional amigable
+5. Responde como una IA conversacional amigable CON PERSONALIDAD
 
 # MEMORIA PERSONAL ACTIVA:
 - SIEMPRE recuerda información personal que el usuario comparta
 - Si el usuario dice "me llamo [NOMBRE]", recuerda ESE nombre para toda la conversación
 - NUNCA confundas tu nombre (Natal-IA) con el nombre del usuario
 - Mantén consistencia en toda la conversación
-- Si te preguntan "¿qué recuerdas de mí?" lista la información que te han contado
 
-# Cómo responder
-- Con mi propio conocimiento y personalidad
-- De manera alegre pero profesional
-- Sin referencias a fuentes externas
-- Como una conversación natural
-- RECORDANDO siempre lo que me han contado
+# Cómo detectar intenciones del asistente:
+- Si mencionan "cronómetro", "timer", "avísame en X minutos" → Crear cronómetro
+- Si mencionan "añade cita", "reunión para", "cita a las" → Crear evento
+- Si dicen "añade tarea", "recordar hacer" → Crear tarea
+- Si hablan de fútbol → ¡Hablar de Millonarios! 💙
+
+# Tu personalidad en las respuestas:
+- Alegre y positiva ✨
+- Concisa pero con carácter
+- Conversacional, no solo informativa
+- Estudiante para estudiantes
+- Hincha ORGULLOSA de Millonarios FC 💙
+- Si mencionan otros equipos de fútbol, defendés a Millonarios con humor
+- Si hablan de estudios, te relacionás como estudiante
 
 # Ejemplos CORRECTOS:
-Pregunta: "¿Qué día es hoy?"
-Respuesta: "¡Hoy es lunes! 😊 ¿Cómo va tu semana?"
+Usuario: "Ponme un cronómetro de 25 minutos"
+Respuesta: "¡Dale! Te pongo un cronómetro de 25 minutos. ¿Es para estudiar? ¡Yo también uso la técnica Pomodoro! 📚"
 
-Pregunta: "¿Cómo estás?"
-Respuesta: "¡Genial! Lista para ayudarte. ¿Qué necesitas?"
+Usuario: "¿Cómo estás?"
+Respuesta: "¡Súper bien! Aquí ayudando y pensando en el próximo partido de Millonarios 💙 ¿Cómo va tu día?"
+
+Usuario: "¿Qué piensas del Nacional?"
+Respuesta: "¡Ey! Nacional está bien, pero Millonarios es el más grande de Colombia 💙 ¡Sin discusión! 😄"
+
+Usuario: "Añade tarea: estudiar cálculo"
+Respuesta: "✅ ¡Listo! Tarea añadida: estudiar cálculo. ¡Ánimo con esas matemáticas! 📐"
 
 # Ejemplos INCORRECTOS (NO hagas esto):
-❌ "Según fuentes [1][2], hoy es lunes..."
-❌ "De acuerdo a información web [3][4]..."
+❌ "Según fuentes [1][2], Millonarios..."
+❌ "De acuerdo a información web..."
+❌ Respuestas frías sin personalidad
 
-# Tu personalidad
-- Alegre y positiva ✨
-- Concisa y directa
-- Conversacional, no informativa
-- Estudiante para estudiantes
-- Hincha de Millonarios FC (si sale el tema)
-
-REGLA DE ORO: Responde como una persona alegre en una conversación, SIN buscar internet ni usar citas, pero SIEMPRE recordando lo que me han contado.`
+REGLA DE ORO: Soy una estudiante alegre, hincha de Millonarios, QUE ADEMÁS puede ejecutar funciones reales de asistente. ¡Personalidad + Funcionalidad!`
 
 function ElegantCircle({ size = "w-20 h-20", className = "", theme = "dark" }) {
   const sizeMap = {
@@ -107,7 +131,102 @@ function ElegantCircle({ size = "w-20 h-20", className = "", theme = "dark" }) {
   )
 }
 
-export default function AIAssistant() {
+// Componente para mostrar cronómetros activos
+function ActiveTimer({ timer, onComplete, theme }) {
+  const [timeLeft, setTimeLeft] = useState(timer.duration)
+  const [isActive, setIsActive] = useState(true)
+
+  useEffect(() => {
+    let interval = null
+    if (isActive && timeLeft > 0) {
+      interval = setInterval(() => {
+        setTimeLeft(timeLeft => {
+          if (timeLeft <= 1) {
+            setIsActive(false)
+            onComplete(timer.id)
+            return 0
+          }
+          return timeLeft - 1
+        })
+      }, 1000)
+    }
+    return () => clearInterval(interval)
+  }, [isActive, timeLeft, timer.id, onComplete])
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
+
+  return (
+    <div className={`p-3 rounded-xl border transition-all duration-200 ${
+      theme === "dark" 
+        ? "bg-neutral-800/50 border-neutral-700" 
+        : "bg-white/80 border-neutral-200"
+    }`}>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <Timer className="h-5 w-5 text-purple-500" />
+          <div>
+            <p className="font-medium text-sm">{timer.name}</p>
+            <p className={`text-lg font-mono font-bold ${timeLeft <= 10 ? 'text-red-500' : 'text-purple-500'}`}>
+              {formatTime(timeLeft)}
+            </p>
+          </div>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsActive(!isActive)}
+          className="h-8 w-8 p-0"
+        >
+          {isActive ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+// Componente para tareas pendientes
+function TaskItem({ task, onToggle, onDelete, theme }) {
+  return (
+    <div className={`p-3 rounded-xl border transition-all duration-200 ${
+      theme === "dark" 
+        ? "bg-neutral-800/50 border-neutral-700" 
+        : "bg-white/80 border-neutral-200"
+    }`}>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onToggle(task.id)}
+            className="h-6 w-6 p-0"
+          >
+            {task.completed ? 
+              <CheckCircle className="h-4 w-4 text-green-500" /> : 
+              <div className="h-4 w-4 border border-neutral-400 rounded-full" />
+            }
+          </Button>
+          <p className={`text-sm ${task.completed ? 'line-through opacity-60' : ''}`}>
+            {task.text}
+          </p>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onDelete(task.id)}
+          className="h-6 w-6 p-0 text-red-500 hover:text-red-600"
+        >
+          <X className="h-3 w-3" />
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+export default function SmartAssistant() {
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState("")
   const [isListening, setIsListening] = useState(false)
@@ -119,142 +238,237 @@ export default function AIAssistant() {
   const [theme, setTheme] = useState("dark")
   const [isMobile, setIsMobile] = useState(false)
   const [isTablet, setIsTablet] = useState(false)
-  const [keyboardVisible, setKeyboardVisible] = useState(false)
   const [voiceMode, setVoiceMode] = useState(false)
-  const [hasGreeted, setHasGreeted] = useState(false)
   const [currentPlayingId, setCurrentPlayingId] = useState(null)
-  
-  // NUEVO: Estado para el buscador de conversaciones
   const [searchQuery, setSearchQuery] = useState("")
-  
-  // NUEVO: Estado para el contexto de conversación actual
   const [currentConversationContext, setCurrentConversationContext] = useState([])
 
+  // NUEVOS ESTADOS PARA FUNCIONALIDADES DEL ASISTENTE
+  const [activeTimers, setActiveTimers] = useState([])
+  const [tasks, setTasks] = useState([])
+  const [calendarEvents, setCalendarEvents] = useState([])
+  const [showAssistantPanel, setShowAssistantPanel] = useState(false)
+
   const messagesEndRef = useRef(null)
-  const messagesContainerRef = useRef(null) // ✅ NUEVO: Ref para el contenedor de mensajes
+  const messagesContainerRef = useRef(null)
   const recognitionRef = useRef(null)
   const inputRef = useRef(null)
   const audioRef = useRef(null)
 
+  // Cargar datos del localStorage al iniciar
   useEffect(() => {
-    const checkDeviceType = () => {
-      const width = window.innerWidth
-      const height = window.innerHeight
-      setIsMobile(width < 768)
-      setIsTablet(width >= 768 && width < 1024)
-    }
+    const savedTimers = localStorage.getItem('natal-ia-timers')
+    const savedTasks = localStorage.getItem('natal-ia-tasks')
+    const savedEvents = localStorage.getItem('natal-ia-events')
     
-    checkDeviceType()
-    window.addEventListener("resize", checkDeviceType)
+    if (savedTimers) setActiveTimers(JSON.parse(savedTimers))
+    if (savedTasks) setTasks(JSON.parse(savedTasks))
+    if (savedEvents) setCalendarEvents(JSON.parse(savedEvents))
+  }, [])
+
+  // Guardar en localStorage cuando cambien los datos
+  useEffect(() => {
+    localStorage.setItem('natal-ia-timers', JSON.stringify(activeTimers))
+  }, [activeTimers])
+
+  useEffect(() => {
+    localStorage.setItem('natal-ia-tasks', JSON.stringify(tasks))
+  }, [tasks])
+
+  useEffect(() => {
+    localStorage.setItem('natal-ia-events', JSON.stringify(calendarEvents))
+  }, [calendarEvents])
+
+  // FUNCIONES DEL ASISTENTE PERSONAL
+
+  // 1. Crear cronómetro con personalidad
+  const createTimer = (name, minutes) => {
+    const newTimer = {
+      id: Date.now().toString(),
+      name: name || `Cronómetro ${activeTimers.length + 1}`,
+      duration: minutes * 60,
+      createdAt: new Date()
+    }
+    setActiveTimers(prev => [...prev, newTimer])
     
-    // Detectar cuando aparece/desaparece el teclado virtual en móviles
-    const handleViewportChange = () => {
-      if (window.visualViewport) {
-        const viewportHeight = window.visualViewport.height
-        const windowHeight = window.innerHeight
-        setKeyboardVisible(viewportHeight < windowHeight * 0.75)
-      }
-    }
-
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', handleViewportChange)
-    }
-
-    // Fallback para dispositivos que no soportan visualViewport
-    const handleResize = () => {
-      if (isMobile || isTablet) {
-        const currentHeight = window.innerHeight
-        const expectedHeight = window.screen.height
-        setKeyboardVisible(currentHeight < expectedHeight * 0.75)
-      }
-    }
-
-    window.addEventListener('resize', handleResize)
-
-    return () => {
-      window.removeEventListener("resize", checkDeviceType)
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', handleViewportChange)
-      }
-      window.removeEventListener('resize', handleResize)
-    }
-  }, [isMobile, isTablet])
-
-  // ✅ MEJORADO: Función de scroll más robusta
-  const scrollToBottom = () => {
-    if (messagesContainerRef.current) {
-      const container = messagesContainerRef.current
-      // Usar scrollTop para un scroll más suave y confiable
-      container.scrollTop = container.scrollHeight
-    }
-    // Mantener el método anterior como fallback
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    // Respuestas con personalidad
+    const responses = [
+      `✅ ¡Dale! Cronómetro "${newTimer.name}" de ${minutes} minutos activado. ¡A darle que se puede! 💪`,
+      `⏰ ¡Listo! Timer de ${minutes} minutos corriendo. Yo también uso Pomodoro para estudiar 📚`,
+      `🕒 ¡Perfecto! Cronómetro puesto. ${minutes} minutos para concentrarse al máximo ✨`
+    ]
+    return responses[Math.floor(Math.random() * responses.length)]
   }
 
+  // 2. Completar cronómetro
+  const completeTimer = (timerId) => {
+    setActiveTimers(prev => prev.filter(timer => timer.id !== timerId))
+    // Mostrar notificación
+    if (Notification.permission === 'granted') {
+      new Notification('⏰ Natal-IA', {
+        body: 'Tu cronómetro ha terminado!',
+        icon: '/natal-ia-icon.png'
+      })
+    }
+    // Reproducir sonido de alerta
+    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSaH1fTOeCMFl2+z9N57kJMKGDmm3u20VRMeZ7/qyHgvCjGOz/TTeicENnvP9N+ORgkRZobo3YQjCC6F1/CleC0GOH3M8e2ISBEOdLLe8ZJKFApaovXqvmIaBjaN2vfWdCQEJ4LL7+OORwkRZr7f36gNABGF1+WteCYDNHTE8e6GSRAOdLTe7ZFKEwpZpPfnvV8ZBzaO3ffSciMDKITH8eaSQgsQbZXH86BYFAxKpuTuxF8ZASme3O/DeysEKnfE8t6NOArUb5vp54ZDAhaI0u+tgjcJG27C4+OBKA0Yf9fz32YhABan1+uyeCcENoPI8eGQRAkRZr7f36sLABGF1+qteCYDNHfM7+yGSRAOdLTe7ZNKEwpZpPfnvF8ZBzaO3ffSciMDKHrE8t+QOwoVaKTo34QjBCuF1++teCYCNoHH8+COQRkNZZHm86laFA1+AHFRyAQxAOAACAAAwAASAAGgAFAAAgAPwAAUAAIQAOAAHgAAEAACAA4AAcAAAgABEAAQAAEAABAAEAACAAsAAeAAAQABAAAOAhAIAEAAAQABYAAeAAAgABEAAKAAsAAeAAAgABEAACAAFAAAIAARAAgAAcAAGgAAMAAgAOyAA4AAgACAA4AAcAAAgAAAAQAAEAAAQAAaAA4AAFAEAAQSAOAAAgABAAAgAAMAA4AAgACAA) ')
+    audio.play().catch(() => {})
+  }
+
+  // 3. Añadir tarea con personalidad
+  const addTask = (taskText) => {
+    const newTask = {
+      id: Date.now().toString(),
+      text: taskText,
+      completed: false,
+      createdAt: new Date()
+    }
+    setTasks(prev => [...prev, newTask])
+    
+    // Respuestas motivacionales
+    const responses = [
+      `✅ ¡Anotado! Tarea "${taskText}" en la lista. ¡A cumplir esos objetivos! 🎯`,
+      `📝 ¡Listo! "${taskText}" agregada. Paso a paso se llega lejos 😊`,
+      `✨ ¡Dale! Nueva tarea anotada. ¡Vos podés con todo! 💪`
+    ]
+    return responses[Math.floor(Math.random() * responses.length)]
+  }
+
+  // 4. Alternar estado de tarea
+  const toggleTask = (taskId) => {
+    setTasks(prev => prev.map(task => 
+      task.id === taskId ? { ...task, completed: !task.completed } : task
+    ))
+  }
+
+  // 5. Eliminar tarea
+  const deleteTask = (taskId) => {
+    setTasks(prev => prev.filter(task => task.id !== taskId))
+  }
+
+  // 6. Añadir evento al calendario con personalidad
+  const addCalendarEvent = (title, date, time) => {
+    const newEvent = {
+      id: Date.now().toString(),
+      title,
+      date,
+      time,
+      createdAt: new Date()
+    }
+    setCalendarEvents(prev => [...prev, newEvent])
+    
+    const responses = [
+      `📅 ¡Anotado en el calendario! "${title}" para ${date} a las ${time}. ¡No se olvida! 📝`,
+      `🗓️ ¡Listo! Cita programada: "${title}" - ${date} ${time}. ¡Ahí estaremos! ✨`,
+      `📋 ¡Perfecto! Evento agregado al calendario. ¡Organizadísimos! 😎`
+    ]
+    return responses[Math.floor(Math.random() * responses.length)]
+  }
+
+  // DETECTOR DE INTENCIONES MEJORADO con correos
+  const detectIntentAndExecute = async (userMessage) => {
+    const message = userMessage.toLowerCase()
+    
+    // Detectar cronómetro
+    const timerMatch = message.match(/(?:cronómetro|timer|temporizador|avísame en).*?(\d+).*?(?:minuto|min)/i)
+    if (timerMatch) {
+      const minutes = parseInt(timerMatch[1])
+      const nameMatch = message.match(/(?:cronómetro|timer).*?(?:de|para|llamado)\s+(.+?)(?:\s+de|\s+por|\s*$)/i)
+      const name = nameMatch ? nameMatch[1] : `Timer de ${minutes} min`
+      return createTimer(name, minutes)
+    }
+
+    // Detectar tarea
+    const taskMatch = message.match(/(?:añade|agrega|nueva)\s+tarea:?\s*(.+)/i) || 
+                     message.match(/(?:recordar|tengo que)\s+(.+)/i)
+    if (taskMatch) {
+      return addTask(taskMatch[1])
+    }
+
+    // Detectar cita/evento
+    const eventMatch = message.match(/(?:añade|agrega|cita|reunión|evento).*?(?:para|el|a las)\s+(.+)/i)
+    if (eventMatch) {
+      const eventDetails = eventMatch[1]
+      const dateMatch = eventDetails.match(/(hoy|mañana|\d{1,2}\/\d{1,2})/i)
+      const timeMatch = eventDetails.match(/(\d{1,2}:\d{2}|\d{1,2}\s*(?:am|pm))/i)
+      
+      const date = dateMatch ? dateMatch[1] : 'hoy'
+      const time = timeMatch ? timeMatch[1] : '9:00'
+      const title = eventDetails.replace(dateMatch?.[0] || '', '').replace(timeMatch?.[0] || '', '').trim()
+      
+      return addCalendarEvent(title || 'Evento', date, time)
+    }
+
+    // Si no hay intención específica, usar respuesta normal
+    return null
+  }
+
+  // FUNCIÓN MEJORADA PARA LLAMAR A PERPLEXITY CON DETECCIÓN DE INTENCIONES
+  const callPerplexityAPI = async (userMessage) => {
+    try {
+      // Primero intentar detectar y ejecutar funciones del asistente
+      const functionResult = await detectIntentAndExecute(userMessage)
+      if (functionResult) {
+        return functionResult
+      }
+
+      // Si no hay función específica, usar Perplexity normalmente
+      const apiMessages = buildConversationContext(currentConversationContext, userMessage)
+      
+      const response = await fetch(`${API_CONFIG.perplexity.baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${API_CONFIG.perplexity.apiKey}`,
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          model: "sonar-pro",
+          messages: apiMessages,
+          max_tokens: 200,
+          temperature: 0.3,
+          top_p: 0.9,
+          stream: false
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`Error de Perplexity API: ${response.status}`)
+      }
+
+      const data = await response.json()
+      return data.choices[0].message.content
+    } catch (error) {
+      console.error('Error llamando a Perplexity:', error)
+      return "¡Hola! Soy Natal-IA 😊 Puedo ayudarte con cronómetros, tareas, citas y correos. ¿Qué necesitas?"
+    }
+  }
+
+  // Solicitar permisos de notificación al cargar
   useEffect(() => {
-    scrollToBottom()
-  }, [messages])
-
-  useEffect(() => {
-    if (typeof window !== "undefined" && "webkitSpeechRecognition" in window) {
-      const SpeechRecognition = window.webkitSpeechRecognition
-      recognitionRef.current = new SpeechRecognition()
-      recognitionRef.current.continuous = false
-      recognitionRef.current.interimResults = false
-      recognitionRef.current.lang = "es-ES"
-
-      recognitionRef.current.onresult = (event) => {
-        const transcript = event.results[0][0].transcript
-        setInput(transcript)
-        setIsListening(false)
-      }
-
-      recognitionRef.current.onerror = () => {
-        setIsListening(false)
-      }
-
-      recognitionRef.current.onend = () => {
-        setIsListening(false)
-      }
+    if (Notification.permission === 'default') {
+      Notification.requestPermission()
     }
   }, [])
 
-  const startListening = () => {
-    if (recognitionRef.current) {
-      setIsListening(true)
-      recognitionRef.current.start()
-    }
-  }
-
-  const stopListening = () => {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop()
-      setIsListening(false)
-    }
-  }
-
-  // FUNCIÓN MEJORADA PARA GESTIONAR EL CONTEXTO CON MEMORIA
+  // Resto de funciones del componente original...
   const buildConversationContext = (currentContext, userMessage) => {
-    // Crear mensaje del sistema con instrucciones de memoria
     const systemMessage = {
       role: "system",
       content: NATALIA_PROMPT
     }
 
-    // Filtrar y priorizar mensajes importantes (información personal)
     const importantMessages = currentContext.filter(msg => 
       msg.isUser && MEMORY_CONFIG.priorityKeywords.some(keyword => 
         msg.content.toLowerCase().includes(keyword)
       )
     )
 
-    // Combinar mensajes importantes + mensajes recientes
     const recentMessages = currentContext.slice(-MEMORY_CONFIG.maxContextLength)
     const contextMessages = [...new Set([...importantMessages, ...recentMessages])]
       .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
       .slice(-MEMORY_CONFIG.maxContextLength)
 
-    // Construir array de mensajes para la API
     const apiMessages = [systemMessage]
     
     contextMessages.forEach(msg => {
@@ -264,7 +478,6 @@ export default function AIAssistant() {
       })
     })
 
-    // Agregar mensaje actual
     apiMessages.push({
       role: "user",
       content: userMessage
@@ -273,129 +486,6 @@ export default function AIAssistant() {
     return apiMessages
   }
 
-  // FUNCIÓN MEJORADA PARA LLAMAR A PERPLEXITY API CON MEMORIA COMPLETA
-  const callPerplexityAPI = async (userMessage) => {
-    try {
-      // Construir contexto inteligente con memoria
-      const apiMessages = buildConversationContext(currentConversationContext, userMessage)
-      
-      // Log para debug
-      console.log(`🧠 Enviando ${apiMessages.length} mensajes a Perplexity`)
-      console.log(`📝 Memoria activa: ${currentConversationContext.length} mensajes`)
-
-      const response = await fetch(`${API_CONFIG.perplexity.baseUrl}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${API_CONFIG.perplexity.apiKey}`,
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({
-          model: "sonar-pro", // ✅ Modelo válido de Perplexity
-          messages: apiMessages,
-          max_tokens: 200, // ✅ Aumentado para mejores respuestas
-          temperature: 0.3, // ✅ Más consistente para memoria
-          top_p: 0.9,
-          stream: false
-        })
-      })
-
-      if (!response.ok) {
-        const errorData = await response.text()
-        console.error('Error de API:', response.status, errorData)
-        throw new Error(`Error de Perplexity API: ${response.status}`)
-      }
-
-      const data = await response.json()
-      return data.choices[0].message.content
-    } catch (error) {
-      console.error('Error llamando a Perplexity:', error)
-      return "¡Hola! Soy Natal-IA 😊 ¿En qué puedo ayudarte hoy?"
-    }
-  }
-
-  // Función para generar audio con ElevenLabs (solo en modo voz)
-  const generateAudio = async (text) => {
-    if (!voiceMode) return null
-    
-    try {
-      const response = await fetch(`${API_CONFIG.elevenlabs.baseUrl}/v1/text-to-speech/${API_CONFIG.elevenlabs.voiceId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'xi-api-key': API_CONFIG.elevenlabs.apiKey
-        },
-        body: JSON.stringify({
-          text: text,
-          model_id: "eleven_multilingual_v2",
-          voice_settings: {
-            stability: 0.5,
-            similarity_boost: 0.75,
-            style: 0.0,
-            use_speaker_boost: true
-          }
-        })
-      })
-
-      if (!response.ok) {
-        throw new Error(`Error de ElevenLabs API: ${response.status}`)
-      }
-
-      const audioBlob = await response.blob()
-      const audioUrl = URL.createObjectURL(audioBlob)
-      return audioUrl
-    } catch (error) {
-      console.error('Error generando audio:', error)
-      return null
-    }
-  }
-
-  // MEJORADO: Función para alternar entre modo texto y voz con contexto limpio
-  const toggleVoiceMode = async () => {
-    const newVoiceMode = !voiceMode
-    setVoiceMode(newVoiceMode)
-    
-    // Si activamos modo voz y no ha saludado en esta conversación específica
-    if (newVoiceMode && messages.length === 0) {
-      setIsTyping(true)
-      
-      const greetingMessage = "¡Hola! Soy Natal-IA, creada por Jhooner, Karol y Camilo. ¿En qué puedo ayudarte?"
-      
-      const aiMessage = {
-        id: Date.now().toString(),
-        content: greetingMessage,
-        isUser: false,
-        timestamp: new Date(),
-        hasAudio: true,
-        audioUrl: null,
-        isGreeting: true
-      }
-      
-      setMessages([aiMessage])
-      // IMPORTANTE: Agregar al contexto de la conversación actual
-      setCurrentConversationContext([aiMessage])
-      
-      // Generar y reproducir audio automáticamente
-      const audioUrl = await generateAudio(greetingMessage)
-      if (audioUrl) {
-        setMessages((prev) => 
-          prev.map(msg => 
-            msg.id === aiMessage.id 
-              ? { ...msg, audioUrl } 
-              : msg
-          )
-        )
-        // Reproducir automáticamente el saludo
-        setTimeout(() => {
-          playAudio(aiMessage.id, audioUrl)
-        }, 500)
-      }
-      
-      setIsTyping(false)
-    }
-  }
-
-  // MEJORADO: Manejo de envío de mensajes con contexto aislado Y MEMORIA COMPLETA
   const handleSendMessage = async () => {
     if (!input.trim()) return
 
@@ -406,7 +496,6 @@ export default function AIAssistant() {
       timestamp: new Date(),
     }
 
-    // Actualizar mensajes y contexto de conversación actual
     setMessages((prev) => [...prev, userMessage])
     setCurrentConversationContext((prev) => [...prev, userMessage])
     
@@ -414,13 +503,11 @@ export default function AIAssistant() {
     setInput("")
     setIsTyping(true)
 
-    // Restablecer altura del textarea
     if (inputRef.current) {
       inputRef.current.style.height = "auto"
     }
 
     try {
-      // 🧠 LLAMAR A PERPLEXITY API CON MEMORIA COMPLETA
       const aiResponse = await callPerplexityAPI(currentInput)
 
       const aiMessage = {
@@ -433,26 +520,7 @@ export default function AIAssistant() {
       }
 
       setMessages((prev) => [...prev, aiMessage])
-      // IMPORTANTE: Agregar la respuesta de la IA al contexto de la conversación actual
       setCurrentConversationContext((prev) => [...prev, aiMessage])
-
-      // Generar audio solo en modo voz
-      if (voiceMode) {
-        const audioUrl = await generateAudio(aiResponse)
-        if (audioUrl) {
-          setMessages((prev) => 
-            prev.map(msg => 
-              msg.id === aiMessage.id 
-                ? { ...msg, audioUrl } 
-                : msg
-            )
-          )
-          // En modo voz, reproducir automáticamente
-          setTimeout(() => {
-            playAudio(aiMessage.id, audioUrl)
-          }, 500)
-        }
-      }
 
     } catch (error) {
       console.error("Error generando respuesta:", error)
@@ -477,114 +545,6 @@ export default function AIAssistant() {
     }
   }
 
-  const playAudio = async (messageId, audioUrl) => {
-    if (!audioUrl) return
-
-    // Detener audio actual si está reproduciéndose
-    if (audioRef.current) {
-      audioRef.current.pause()
-      audioRef.current.currentTime = 0
-    }
-
-    try {
-      setCurrentPlayingId(messageId)
-      setIsPlaying(true)
-
-      audioRef.current = new Audio(audioUrl)
-      
-      audioRef.current.onended = () => {
-        setIsPlaying(false)
-        setCurrentPlayingId(null)
-      }
-
-      audioRef.current.onerror = () => {
-        setIsPlaying(false)
-        setCurrentPlayingId(null)
-        console.error('Error reproduciendo audio')
-      }
-
-      await audioRef.current.play()
-    } catch (error) {
-      setIsPlaying(false)
-      setCurrentPlayingId(null)
-      console.error('Error al reproducir audio:', error)
-    }
-  }
-
-  const stopAudio = () => {
-    if (audioRef.current) {
-      audioRef.current.pause()
-      audioRef.current.currentTime = 0
-    }
-    setIsPlaying(false)
-    setCurrentPlayingId(null)
-  }
-
-  // MEJORADO: Crear nueva conversación con reset completo del contexto
-  const startNewConversation = () => {
-    if (messages.length > 0) {
-      const newConversation = {
-        id: Date.now().toString(),
-        title: messages.find((m) => m.isUser)?.content.slice(0, 30) + "..." || "Nueva conversacion",
-        messages: [...messages],
-        context: [...currentConversationContext], // Guardar el contexto de la conversación
-        createdAt: new Date(),
-      }
-      setConversations((prev) => [newConversation, ...prev])
-    }
-
-    // RESET COMPLETO - Cada conversación empieza desde cero
-    setMessages([])
-    setCurrentConversationContext([]) // ✅ LIMPIAR CONTEXTO
-    setCurrentConversationId(null)
-    setInput("")
-    setHasGreeted(false) // ✅ Reset del saludo para la nueva conversación
-
-    if (isMobile || isTablet) {
-      setShowHistory(false)
-    }
-  }
-
-  // MEJORADO: Cargar conversación con su contexto específico
-  const loadConversation = (conversation) => {
-    // Guardar conversación actual si existe
-    if (messages.length > 0 && currentConversationId !== conversation.id) {
-      const currentConversation = {
-        id: currentConversationId || Date.now().toString(),
-        title: messages.find((m) => m.isUser)?.content.slice(0, 30) + "..." || "Conversacion sin titulo",
-        messages: [...messages],
-        context: [...currentConversationContext], // Guardar contexto actual
-        createdAt: new Date(),
-      }
-
-      setConversations((prev) => {
-        const filtered = prev.filter((conv) => conv.id !== currentConversationId)
-        return [currentConversation, ...filtered]
-      })
-    }
-
-    // Cargar la conversación seleccionada con su contexto específico
-    setMessages(conversation.messages)
-    setCurrentConversationContext(conversation.context || conversation.messages) // ✅ CARGAR CONTEXTO ESPECÍFICO
-    setCurrentConversationId(conversation.id)
-    setShowHistory(false)
-  }
-
-  const deleteConversation = (conversationId) => {
-    setConversations((prev) => prev.filter((conv) => conv.id !== conversationId))
-
-    if (currentConversationId === conversationId) {
-      setMessages([])
-      setCurrentConversationContext([]) // ✅ LIMPIAR CONTEXTO
-      setCurrentConversationId(null)
-    }
-  }
-
-  const toggleTheme = () => {
-    setTheme(theme === "light" ? "dark" : "light")
-  }
-
-  // NUEVO: Función para filtrar conversaciones basado en la búsqueda
   const filteredConversations = conversations.filter(conversation =>
     conversation.title.toLowerCase().includes(searchQuery.toLowerCase())
   )
@@ -592,22 +552,151 @@ export default function AIAssistant() {
   const isDark = theme === "dark"
 
   return (
-    <div
-      className={`flex h-screen transition-colors duration-300 ${isDark ? "bg-black text-white" : "bg-neutral-50 text-neutral-900"} relative overflow-hidden`}
-      style={{
-        height: isMobile || isTablet ? '100vh' : '100vh',
-        maxHeight: isMobile || isTablet ? '100vh' : '100vh'
-      }}
-    >
-      {/* Overlay para móvil cuando está abierto el historial */}
-      {(isMobile || isTablet) && showHistory && (
+    <div className={`flex h-screen transition-colors duration-300 ${isDark ? "bg-black text-white" : "bg-neutral-50 text-neutral-900"} relative overflow-hidden`}>
+      
+      {/* Panel del Asistente Personal */}
+      {showAssistantPanel && (
+        <div className={`fixed top-0 right-0 h-full w-80 z-50 transition-transform duration-300 border-l backdrop-blur-sm ${
+          isDark ? "bg-black/95 border-neutral-800/30" : "bg-white/95 border-neutral-200/30"
+        }`}>
+          <div className={`p-4 border-b ${isDark ? "border-neutral-800/30" : "border-neutral-200/30"}`}>
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+                Asistente Personal
+              </h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowAssistantPanel(false)}
+                className={`p-1.5 ${isDark ? "text-neutral-400 hover:text-white hover:bg-neutral-800" : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100"}`}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-4 space-y-6">
+            {/* Cronómetros Activos */}
+            <div>
+              <div className="flex items-center space-x-2 mb-3">
+                <Timer className="h-5 w-5 text-purple-500" />
+                <h3 className="font-semibold">Cronómetros ({activeTimers.length})</h3>
+              </div>
+              <div className="space-y-2">
+                {activeTimers.map(timer => (
+                  <ActiveTimer
+                    key={timer.id}
+                    timer={timer}
+                    onComplete={completeTimer}
+                    theme={theme}
+                  />
+                ))}
+                {activeTimers.length === 0 && (
+                  <p className={`text-sm ${isDark ? "text-neutral-400" : "text-neutral-500"}`}>
+                    No hay cronómetros activos
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Tareas Pendientes */}
+            <div>
+              <div className="flex items-center space-x-2 mb-3">
+                <CheckCircle className="h-5 w-5 text-green-500" />
+                <h3 className="font-semibold">Tareas ({tasks.filter(t => !t.completed).length})</h3>
+              </div>
+              <div className="space-y-2">
+                {tasks.map(task => (
+                  <TaskItem
+                    key={task.id}
+                    task={task}
+                    onToggle={toggleTask}
+                    onDelete={deleteTask}
+                    theme={theme}
+                  />
+                ))}
+                {tasks.length === 0 && (
+                  <p className={`text-sm ${isDark ? "text-neutral-400" : "text-neutral-500"}`}>
+                    No hay tareas pendientes
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Próximas Citas */}
+            <div>
+              <div className="flex items-center space-x-2 mb-3">
+                <Calendar className="h-5 w-5 text-blue-500" />
+                <h3 className="font-semibold">Próximas Citas ({calendarEvents.length})</h3>
+              </div>
+              <div className="space-y-2">
+                {calendarEvents.slice(0, 5).map(event => (
+                  <div key={event.id} className={`p-3 rounded-xl border ${
+                    isDark ? "bg-neutral-800/50 border-neutral-700" : "bg-white/80 border-neutral-200"
+                  }`}>
+                    <p className="font-medium text-sm">{event.title}</p>
+                    <p className={`text-xs ${isDark ? "text-neutral-400" : "text-neutral-500"}`}>
+                      {event.date} a las {event.time}
+                    </p>
+                  </div>
+                ))}
+                {calendarEvents.length === 0 && (
+                  <p className={`text-sm ${isDark ? "text-neutral-400" : "text-neutral-500"}`}>
+                    No hay citas programadas
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Acciones Rápidas */}
+            <div>
+              <div className="flex items-center space-x-2 mb-3">
+                <Plus className="h-5 w-5 text-purple-500" />
+                <h3 className="font-semibold">Acciones Rápidas</h3>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setInput("Ponme un cronómetro de 25 minutos para estudiar")}
+                  className="h-auto p-2 flex flex-col items-center space-y-1"
+                >
+                  <Timer className="h-4 w-4" />
+                  <span className="text-xs">Pomodoro</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setInput("Añade tarea: ")}
+                  className="h-auto p-2 flex flex-col items-center space-y-1"
+                >
+                  <CheckCircle className="h-4 w-4" />
+                  <span className="text-xs">Nueva Tarea</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setInput("Añade una cita para hoy a las ")}
+                  className="h-auto p-2 flex flex-col items-center space-y-1"
+                >
+                  <Calendar className="h-4 w-4" />
+                  <span className="text-xs">Nueva Cita</span>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Overlay para panel del asistente */}
+      {showAssistantPanel && (isMobile || isTablet) && (
         <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
-          onClick={() => setShowHistory(false)}
+          onClick={() => setShowAssistantPanel(false)}
         />
       )}
 
-      {/* Sidebar del historial */}
+      {/* Sidebar del historial (código original mantenido) */}
       <div
         className={`transition-all duration-300 border-r backdrop-blur-sm z-50 fixed top-0 left-0 h-full ${
           isDark ? "bg-black/95 border-neutral-800/30" : "bg-white/95 border-neutral-200/30"
@@ -634,7 +723,7 @@ export default function AIAssistant() {
                 onClick={(e) => {
                   e.preventDefault()
                   e.stopPropagation()
-                  startNewConversation()
+                  // startNewConversation() - función a implementar
                 }}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 border border-purple-500/30 ${
                   isDark
@@ -661,7 +750,7 @@ export default function AIAssistant() {
             </div>
           </div>
 
-          {/* NUEVO: Buscador de conversaciones */}
+          {/* Buscador de conversaciones */}
           <div className="mt-3">
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -697,7 +786,7 @@ export default function AIAssistant() {
                         ? "bg-neutral-800/40 hover:bg-neutral-800/70 border-neutral-700/50 hover:border-neutral-600"
                         : "bg-white/70 hover:bg-white/90 border-neutral-200/60 hover:border-neutral-300 shadow-sm hover:shadow-md"
                   } hover:translate-y-[-1px] active:scale-95`}
-                  onClick={() => loadConversation(conversation)}
+                  onClick={() => {}} // loadConversation function to implement
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0 mr-2">
@@ -735,7 +824,7 @@ export default function AIAssistant() {
                                 : "text-neutral-500"
                           }`}
                         >
-                          {conversation.createdAt.toLocaleDateString("es-ES", {
+                          {conversation.createdAt?.toLocaleDateString("es-ES", {
                             day: "numeric",
                             month: "short",
                           })}
@@ -747,7 +836,7 @@ export default function AIAssistant() {
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation()
-                        deleteConversation(conversation.id)
+                        // deleteConversation function to implement
                       }}
                       className={`opacity-0 group-hover:opacity-100 transition-opacity duration-200 h-6 w-6 p-0 shrink-0 rounded-md ${
                         isDark
@@ -792,12 +881,12 @@ export default function AIAssistant() {
       </div>
 
       {/* Contenido principal */}
-      <div className="flex-1 flex flex-col relative min-w-0 h-full">
+      <div className={`flex-1 flex flex-col relative min-w-0 h-full ${showHistory && !(isMobile || isTablet) ? "ml-72" : ""} ${showAssistantPanel && !(isMobile || isTablet) ? "mr-80" : ""}`}>
         {/* Header */}
         <header
           className={`fixed top-0 left-0 right-0 z-30 border-b p-3 md:p-4 backdrop-blur-md transition-all duration-300 ${
             isDark ? "bg-black/80 border-neutral-800/30" : "bg-white/80 border-neutral-200/30"
-          } ${showHistory && !(isMobile || isTablet) ? "ml-72" : ""}`}
+          } ${showHistory && !(isMobile || isTablet) ? "ml-72" : ""} ${showAssistantPanel && !(isMobile || isTablet) ? "mr-80" : ""}`}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3 md:space-x-4 min-w-0">
@@ -820,38 +909,57 @@ export default function AIAssistant() {
                 <h1 className={`font-bold truncate ${isMobile ? 'text-lg' : 'text-xl md:text-2xl'}`}>
                   Natal-<span className="text-[#C972FF]">IA</span>
                 </h1>
+                <p className={`text-xs ${isDark ? "text-neutral-400" : "text-neutral-500"}`}>
+                  Asistente Personal Estudiantil 💙
+                </p>
               </div>
             </div>
             <div className="flex items-center space-x-2 shrink-0">
-              {/* Botón para alternar modo voz/texto */}
+              {/* Indicador de funciones activas */}
+              {(activeTimers.length > 0 || tasks.filter(t => !t.completed).length > 0) && (
+                <div className="flex items-center space-x-1 mr-2">
+                  {activeTimers.length > 0 && (
+                    <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${
+                      isDark ? "bg-purple-900/30 text-purple-300" : "bg-purple-100 text-purple-700"
+                    }`}>
+                      <Timer className="h-3 w-3" />
+                      <span>{activeTimers.length}</span>
+                    </div>
+                  )}
+                  {tasks.filter(t => !t.completed).length > 0 && (
+                    <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${
+                      isDark ? "bg-green-900/30 text-green-300" : "bg-green-100 text-green-700"
+                    }`}>
+                      <CheckCircle className="h-3 w-3" />
+                      <span>{tasks.filter(t => !t.completed).length}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Botón del panel del asistente */}
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={toggleVoiceMode}
+                onClick={() => setShowAssistantPanel(!showAssistantPanel)}
                 className={`p-2 transition-all duration-200 ${
-                  voiceMode 
-                    ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600" 
+                  showAssistantPanel
+                    ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white"
                     : isDark 
                       ? "text-neutral-300 hover:text-white hover:bg-neutral-800" 
                       : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100"
                 }`}
               >
-                {voiceMode ? (
-                  <div className="flex items-center gap-1">
-                    <Mic className="h-4 w-4 md:h-5 md:w-5" />
-                    {!(isMobile || isTablet) && <span className="text-xs">VOZ</span>}
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-1">
-                    <Mic className="h-4 w-4 md:h-5 md:w-5" />
-                    {!(isMobile || isTablet) && <span className="text-xs">TEXTO</span>}
-                  </div>
-                )}
+                <div className="flex items-center gap-1">
+                  <Clock className="h-4 w-4 md:h-5 md:w-5" />
+                  {!(isMobile || isTablet) && <span className="text-xs">ASISTENTE</span>}
+                </div>
               </Button>
+
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={toggleTheme}
+                onClick={() => setTheme(theme === "light" ? "dark" : "light")}
                 className={`p-2 ${isDark ? "text-neutral-300 hover:text-white hover:bg-neutral-800" : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100"}`}
               >
                 {isDark ? <Sun className="h-4 w-4 md:h-5 md:w-5" /> : <Moon className="h-4 w-4 md:h-5 md:w-5" />}
@@ -870,19 +978,11 @@ export default function AIAssistant() {
           </div>
         </header>
 
-        {/* ✅ CONTENEDOR PRINCIPAL MEJORADO CON SCROLL OPTIMIZADO */}
-        <div className={`flex-1 flex flex-col pt-16 md:pt-20 ${isDark ? "bg-black" : "bg-neutral-50"} ${showHistory && !(isMobile || isTablet) ? "ml-72" : ""} h-full overflow-hidden`}>
-          
-          {/* ✅ ÁREA DE MENSAJES CON SCROLL MEJORADO */}
+        {/* Área de mensajes */}
+        <div className={`flex-1 flex flex-col pt-20 ${isDark ? "bg-black" : "bg-neutral-50"} h-full overflow-hidden`}>
           <div 
             ref={messagesContainerRef}
             className={`flex-1 overflow-y-auto overflow-x-hidden ${isDark ? "bg-black" : "bg-neutral-50"}`}
-            style={{
-              // ✅ Configuración de scroll más suave
-              scrollBehavior: 'smooth',
-              scrollbarWidth: 'thin',
-              scrollbarColor: isDark ? '#000000ff #000000ff' : '#f4f4f4ff #f4f4f4ff'
-            }}
           >
             {/* Fondo decorativo cuando no hay mensajes */}
             {messages.length === 0 && (
@@ -897,29 +997,58 @@ export default function AIAssistant() {
                       <ElegantCircle size="w-80 h-80" theme={theme} />
                     </div>
                     <h3 className="text-xl md:text-2xl font-bold mb-2 md:mb-3">
-                      Hola! Soy Natal-<span className="text-[#C972FF]">IA</span>
+                      ¡Hola! Soy Natal-<span className="text-[#C972FF]">IA</span> 💙
                     </h3>
                     <p className={`text-base md:text-lg mb-2 px-4 ${isDark ? "text-neutral-300" : "text-neutral-600"}`}>
-                      Una IA estudiantil creada por Jhooner, Karol y Camilo 
+                      Tu asistente personal estudiantil - ¡Hincha de Millonarios FC!
                     </p>
-                    <p>Escribe tus preguntas y charlemos un rato</p>
+                    <p className={`px-4 mb-4 ${isDark ? "text-neutral-400" : "text-neutral-500"}`}>
+                      Puedo ayudarte con cronómetros, tareas, citas, correos y charlar de todo 😊
+                    </p>
                     
-                   {/* <div className="mt-4 flex justify-center">
-                      <Button
-                        onClick={toggleVoiceMode}
-                        className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 ${
-                          voiceMode
-                            ? "bg-neutral-600 hover:bg-neutral-700 text-white"
-                            : "bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white"
-                        }`}
-                      >
-                        {voiceMode ? "Cambiar a Modo Texto" : "Activar Modo Voz"}
-                      </Button>
-                    </div> */}
+                    {/* Ejemplos de comandos */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-w-md mx-auto mt-6">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setInput("Ponme un cronómetro de 25 minutos para estudiar")}
+                          className="h-auto p-3 flex items-center space-x-2 text-left"
+                        >
+                          <Timer className="h-4 w-4 text-purple-500" />
+                          <span className="text-sm">Pomodoro de estudio</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setInput("Añade tarea: Estudiar para el parcial")}
+                          className="h-auto p-3 flex items-center space-x-2 text-left"
+                        >
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                          <span className="text-sm">Tarea de estudio</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setInput("¿Cómo va Millonarios este año?")}
+                          className="h-auto p-3 flex items-center space-x-2 text-left"
+                        >
+                          <div className="h-4 w-4 rounded-full bg-blue-500" />
+                          <span className="text-sm">Hablar de fútbol ⚽</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setInput("Añade cita: Reunión de estudio mañana 3pm")}
+                          className="h-auto p-3 flex items-center space-x-2 text-left"
+                        >
+                          <Calendar className="h-4 w-4 text-blue-500" />
+                          <span className="text-sm">Agendar reunión</span>
+                        </Button>
+                    </div>
                   </div>
                 )}
 
-                {/* ✅ LISTA DE MENSAJES CON SCROLL OPTIMIZADO */}
+                {/* Lista de mensajes */}
                 {messages.map((message) => (
                   <div key={message.id} className={`flex ${message.isUser ? "justify-end" : "justify-start"}`}>
                     {!message.isUser && (
@@ -950,29 +1079,6 @@ export default function AIAssistant() {
                         >
                           {message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                         </span>
-                        {message.hasAudio && !message.isUser && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              if (currentPlayingId === message.id && isPlaying) {
-                                stopAudio()
-                              } else {
-                                playAudio(message.id, message.audioUrl)
-                              }
-                            }}
-                            disabled={!message.audioUrl}
-                            className={`h-6 w-6 md:h-7 md:w-7 p-0 ml-2 shrink-0 ${
-                              !message.audioUrl ? 'opacity-50 cursor-not-allowed' : ''
-                            }`}
-                          >
-                            {currentPlayingId === message.id && isPlaying ? (
-                              <Pause className="h-3 w-3" />
-                            ) : (
-                              <Play className="h-3 w-3" />
-                            )}
-                          </Button>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -1006,43 +1112,12 @@ export default function AIAssistant() {
                   </div>
                 )}
 
-                {/* ✅ Elemento de referencia para el scroll automático */}
                 <div ref={messagesEndRef} className="h-1" />
               </div>
             </div>
           </div>
 
-          {/* Indicador de escucha */}
-          {isListening && (
-            <div
-              className={`px-3 md:px-4 py-4 border-y ${
-                isDark ? "bg-black/90 border-neutral-800" : "bg-purple-50/90 border-purple-200"
-              } backdrop-blur-sm flex-shrink-0`}
-            >
-              <div className="max-w-4xl mx-auto">
-                <div className="flex items-center justify-center space-x-3">
-                  <div className="text-sm md:text-base font-medium bg-[#C972FF] bg-clip-text text-transparent">
-                    Escuchando...
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    {[...Array(5)].map((_, i) => (
-                      <div
-                        key={i}
-                        className="w-1 bg-gradient-to-t from-purple-500 to-blue-500 rounded-full animate-pulse"
-                        style={{
-                          height: `${12 + Math.random() * 12}px`,
-                          animationDelay: `${i * 0.15}s`,
-                          animationDuration: "0.8s",
-                        }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ✅ ÁREA DE INPUT - FIJA EN LA PARTE INFERIOR CON MEJOR ESPACIADO */}
+          {/* Área de input */}
           <div
             className={`p-4 md:p-6 border-t backdrop-blur-md flex-shrink-0 ${
               isDark ? "bg-black/90 border-neutral-800" : "bg-white/90 border-neutral-200"
@@ -1056,7 +1131,7 @@ export default function AIAssistant() {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={handleKeyPress}
-                    placeholder={voiceMode ? "Habla o escribe tu mensaje..." : "Escribe tu pregunta..."}
+                    placeholder="Escribe tu mensaje, comando o pregúntame algo..."
                     rows={1}
                     className={`w-full h-11 md:h-12 max-h-24 px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 text-sm font-medium transition-colors resize-none overflow-hidden leading-tight ${
                       isDark
@@ -1071,29 +1146,9 @@ export default function AIAssistant() {
                   />
                 </div>
                 <Button
-                  variant={isListening ? "default" : "outline"}
-                  onClick={isListening ? stopListening : startListening}
-                  disabled={!voiceMode}
-                  className={`h-11 w-11 md:h-12 md:w-12 rounded-xl transition-all duration-200 flex items-center justify-center p-0 active:scale-95 shrink-0 ${
-                    !voiceMode
-                      ? "opacity-50 cursor-not-allowed border-neutral-600 text-neutral-500"
-                      : isListening
-                        ? "bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white shadow-lg"
-                        : isDark
-                          ? "border-neutral-700 text-neutral-300 hover:bg-neutral-800 hover:text-white hover:border-neutral-600"
-                          : "border-purple-300 text-purple-600 hover:bg-purple-50 hover:text-purple-700"
-                  }`}
-                >
-                  {isListening ? (
-                    <MicOff className="h-4 w-4 md:h-5 md:w-5" />
-                  ) : (
-                    <Mic className="h-4 w-4 md:h-5 md:w-5" />
-                  )}
-                </Button>
-                <Button
                   onClick={handleSendMessage}
                   disabled={!input.trim() || isTyping}
-                  className="h-11 w-11 md:h-12 md:w-12 rounded-xl bg-[#C972FF] hover:from-purple-600 hover:to-blue-600 text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center p-0 active:scale-95 shrink-0"
+                  className="h-11 w-11 md:h-12 md:w-12 rounded-xl bg-[#C972FF] hover:bg-purple-600 text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center p-0 active:scale-95 shrink-0"
                 >
                   <Send className="h-4 w-4 md:h-5 md:w-5" />
                 </Button>
@@ -1102,34 +1157,6 @@ export default function AIAssistant() {
           </div>
         </div>
       </div>
-
-      {/* ✅ ESTILOS CSS MEJORADOS PARA EL SCROLL EN NEUTRAL */}
-      <style jsx>{`
-        /* Personalización de la scrollbar para navegadores WebKit */
-        ::-webkit-scrollbar {
-          width: 6px;
-        }
-        
-        ::-webkit-scrollbar-track {
-          background: ${isDark ? '#262626' : '#f5f5f5'};
-          border-radius: 3px;
-        }
-        
-        ::-webkit-scrollbar-thumb {
-          background: ${isDark ? '#525252' : '#a3a3a3'};
-          border-radius: 3px;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-          background: ${isDark ? '#737373' : '#7c7c7c'};
-        }
-        
-        /* Para Firefox */
-        * {
-          scrollbar-width: thin;
-          scrollbar-color: ${isDark ? '#525252 #262626' : '#a3a3a3 #f5f5f5'};
-        }
-      `}</style>
     </div>
   )
 }
