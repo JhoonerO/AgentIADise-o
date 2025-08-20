@@ -5,7 +5,6 @@ import { Button } from "../components/ui/button"
 import { Mic, MicOff, Send, Play, Pause, History, Trash2, Sun, Moon, X, Menu, Search, Clock, Mail, Calendar, Plus, CheckCircle, XCircle, Timer } from "lucide-react"
 import PulsingBorderShader from "../components/ui/pulsing-border-shader"
 
-
 // Configuración de APIs
 const API_CONFIG = {
   perplexity: {
@@ -27,7 +26,6 @@ const MEMORY_CONFIG = {
 
 // NUEVAS FUNCIONALIDADES DEL ASISTENTE
 const ASSISTANT_FUNCTIONS = {
-  // Detectores de intención
   TIMER_KEYWORDS: ['cronómetro', 'cronometro', 'timer', 'temporizador', 'alarma en', 'avísame en'],
   CALENDAR_KEYWORDS: ['añade una cita', 'agregar cita', 'cita para', 'reunión para', 'recordatorio para', 'evento para'],
   TASK_KEYWORDS: ['añade tarea', 'nueva tarea', 'recordar hacer', 'tengo que hacer', 'lista de tareas']
@@ -49,7 +47,7 @@ INSTRUCCIÓN CRÍTICA: NO busques información en internet. NO uses citas web. E
 
 # NUEVAS CAPACIDADES COMO ASISTENTE PERSONAL:
 1. 🕒 CRONÓMETROS: Puedo crear temporizadores y alarmas
-3. 📅 CALENDARIO: Puedo añadir citas y recordatorios  
+3. 📅 CALENDARIO: Puedo añadir citas y recordatorios  
 4. ✅ TAREAS: Puedo gestionar tu lista de pendientes
 5. 💬 CONVERSACIÓN: Charlar de todo (fútbol, estudios, vida universitaria)
 
@@ -257,27 +255,17 @@ export default function SmartAssistant() {
 
   // Cargar datos del localStorage al iniciar
   useEffect(() => {
-    const savedTimers = localStorage.getItem('natal-ia-timers')
-    const savedTasks = localStorage.getItem('natal-ia-tasks')
-    const savedEvents = localStorage.getItem('natal-ia-events')
-    
-    if (savedTimers) setActiveTimers(JSON.parse(savedTimers))
-    if (savedTasks) setTasks(JSON.parse(savedTasks))
-    if (savedEvents) setCalendarEvents(JSON.parse(savedEvents))
+    const savedConversations = localStorage.getItem('natal-ia-conversations')
+    if (savedConversations) {
+      setConversations(JSON.parse(savedConversations))
+      setCurrentConversationId(JSON.parse(savedConversations)[0]?.id || null)
+    }
   }, [])
 
   // Guardar en localStorage cuando cambien los datos
   useEffect(() => {
-    localStorage.setItem('natal-ia-timers', JSON.stringify(activeTimers))
-  }, [activeTimers])
-
-  useEffect(() => {
-    localStorage.setItem('natal-ia-tasks', JSON.stringify(tasks))
-  }, [tasks])
-
-  useEffect(() => {
-    localStorage.setItem('natal-ia-events', JSON.stringify(calendarEvents))
-  }, [calendarEvents])
+    localStorage.setItem('natal-ia-conversations', JSON.stringify(conversations))
+  }, [conversations])
 
   // FUNCIONES DEL ASISTENTE PERSONAL
 
@@ -365,6 +353,24 @@ export default function SmartAssistant() {
     return responses[Math.floor(Math.random() * responses.length)]
   }
 
+  // Función para agregar una nueva conversación
+  const startNewConversation = () => {
+    const newConversation = {
+      id: Date.now().toString(),
+      title: `Conversación ${conversations.length + 1}`,
+      tasks: [],
+      timers: [],
+      calendarEvents: [],
+      messages: []
+    }
+    setConversations(prev => [...prev, newConversation])
+    setCurrentConversationId(newConversation.id)
+    setTasks([])
+    setActiveTimers([])
+    setCalendarEvents([])
+    setMessages([])
+  }
+
   // DETECTOR DE INTENCIONES MEJORADO con correos
   const detectIntentAndExecute = async (userMessage) => {
     const message = userMessage.toLowerCase()
@@ -380,7 +386,7 @@ export default function SmartAssistant() {
 
     // Detectar tarea
     const taskMatch = message.match(/(?:añade|agrega|nueva)\s+tarea:?\s*(.+)/i) || 
-                     message.match(/(?:recordar|tengo que)\s+(.+)/i)
+                      message.match(/(?:recordar|tengo que)\s+(.+)/i)
     if (taskMatch) {
       return addTask(taskMatch[1])
     }
@@ -682,6 +688,15 @@ export default function SmartAssistant() {
                   <Calendar className="h-4 w-4" />
                   <span className="text-xs">Nueva Cita</span>
                 </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={startNewConversation}
+                  className="h-auto p-2 flex flex-col items-center space-y-1"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span className="text-xs">Nueva Conversación</span>
+                </Button>
               </div>
             </div>
           </div>
@@ -696,7 +711,7 @@ export default function SmartAssistant() {
         />
       )}
 
-      {/* Sidebar del historial (código original mantenido) */}
+      {/* Sidebar del historial */}
       <div
         className={`transition-all duration-300 border-r backdrop-blur-sm z-50 fixed top-0 left-0 h-full ${
           isDark ? "bg-black/95 border-neutral-800/30" : "bg-white/95 border-neutral-200/30"
@@ -721,9 +736,9 @@ export default function SmartAssistant() {
                 variant="ghost"
                 size="sm"
                 onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  // startNewConversation() - función a implementar
+                  e.preventDefault();
+                  e.stopPropagation();
+                  startNewConversation();
                 }}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 border border-purple-500/30 ${
                   isDark
@@ -774,7 +789,7 @@ export default function SmartAssistant() {
         {/* Contenido del historial */}
         <div className={`flex-1 overflow-y-auto p-3 ${isDark ? "bg-black/95" : "bg-white/95"}`}>
           <div className="space-y-2 pr-2">
-            {filteredConversations.map((conversation) => (
+                        {filteredConversations.map((conversation) => (
               <div key={conversation.id} className="group">
                 <div
                   className={`relative p-3 cursor-pointer transition-all duration-200 rounded-xl border ${
@@ -786,7 +801,13 @@ export default function SmartAssistant() {
                         ? "bg-neutral-800/40 hover:bg-neutral-800/70 border-neutral-700/50 hover:border-neutral-600"
                         : "bg-white/70 hover:bg-white/90 border-neutral-200/60 hover:border-neutral-300 shadow-sm hover:shadow-md"
                   } hover:translate-y-[-1px] active:scale-95`}
-                  onClick={() => {}} // loadConversation function to implement
+                  onClick={() => {
+                    setCurrentConversationId(conversation.id);
+                    setTasks(conversation.tasks);
+                    setActiveTimers(conversation.timers);
+                    setCalendarEvents(conversation.calendarEvents);
+                    setMessages(conversation.messages);
+                  }}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0 mr-2">
@@ -824,7 +845,7 @@ export default function SmartAssistant() {
                                 : "text-neutral-500"
                           }`}
                         >
-                          {conversation.createdAt?.toLocaleDateString("es-ES", {
+                          {new Date(conversation.createdAt).toLocaleDateString("es-ES", {
                             day: "numeric",
                             month: "short",
                           })}
@@ -835,10 +856,10 @@ export default function SmartAssistant() {
                       variant="ghost"
                       size="sm"
                       onClick={(e) => {
-                        e.stopPropagation()
-                        // deleteConversation function to implement
+                        e.stopPropagation();
+                        setConversations(prev => prev.filter(c => c.id !== conversation.id));
                       }}
-                      className={`opacity-0 group-hover:opacity-100 transition-opacity duration-200 h-6 w-6 p-0 shrink-0 rounded-md ${
+                      className={`opacity-0 group-hover:opacity-100 transition-opacity duration-200 h-6 w-6 p-0 shrink-0 ${
                         isDark
                           ? "hover:bg-red-500/20 hover:text-red-400 text-neutral-400"
                           : "hover:bg-red-50 hover:text-red-500 text-neutral-500"
@@ -1008,42 +1029,42 @@ export default function SmartAssistant() {
                     
                     {/* Ejemplos de comandos */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-w-md mx-auto mt-6">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setInput("Ponme un cronómetro de 25 minutos para estudiar")}
-                          className="h-auto p-3 flex items-center space-x-2 text-left"
-                        >
-                          <Timer className="h-4 w-4 text-purple-500" />
-                          <span className="text-sm">Pomodoro de estudio</span>
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setInput("Añade tarea: Estudiar para el parcial")}
-                          className="h-auto p-3 flex items-center space-x-2 text-left"
-                        >
-                          <CheckCircle className="h-4 w-4 text-green-500" />
-                          <span className="text-sm">Tarea de estudio</span>
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setInput("¿Cómo va Millonarios este año?")}
-                          className="h-auto p-3 flex items-center space-x-2 text-left"
-                        >
-                          <div className="h-4 w-4 rounded-full bg-blue-500" />
-                          <span className="text-sm">Hablar de fútbol ⚽</span>
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setInput("Añade cita: Reunión de estudio mañana 3pm")}
-                          className="h-auto p-3 flex items-center space-x-2 text-left"
-                        >
-                          <Calendar className="h-4 w-4 text-blue-500" />
-                          <span className="text-sm">Agendar reunión</span>
-                        </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setInput("Ponme un cronómetro de 25 minutos para estudiar")}
+                        className="h-auto p-3 flex items-center space-x-2 text-left"
+                      >
+                        <Timer className="h-4 w-4 text-purple-500" />
+                        <span className="text-sm">Pomodoro de estudio</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setInput("Añade tarea: Estudiar para el parcial")}
+                        className="h-auto p-3 flex items-center space-x-2 text-left"
+                      >
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                        <span className="text-sm">Tarea de estudio</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setInput("¿Cómo va Millonarios este año?")}
+                        className="h-auto p-3 flex items-center space-x-2 text-left"
+                      >
+                        <div className="h-4 w-4 rounded-full bg-blue-500" />
+                        <span className="text-sm">Hablar de fútbol ⚽</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setInput("Añade cita: Reunión de estudio mañana 3pm")}
+                        className="h-auto p-3 flex items-center space-x-2 text-left"
+                      >
+                        <Calendar className="h-4 w-4 text-blue-500" />
+                        <span className="text-sm">Agendar reunión</span>
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -1058,7 +1079,7 @@ export default function SmartAssistant() {
                     )}
                     <div
                       className={`max-w-[85%] md:max-w-[80%] rounded-2xl p-3 md:p-4 ${
-                        message.isUser
+                        message.isUser 
                           ? "text-black ml-8 md:ml-12"
                           : isDark
                             ? "bg-neutral-800 text-neutral-100 mr-8 md:mr-12 border border-neutral-700"
@@ -1077,7 +1098,10 @@ export default function SmartAssistant() {
                             message.isUser ? "text-black/80" : isDark ? "text-neutral-400" : "text-neutral-500"
                           }`}
                         >
-                          {message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          {(message.timestamp instanceof Date
+                            ? message.timestamp
+                            : new Date(message.timestamp)
+                          ).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                         </span>
                       </div>
                     </div>
@@ -1135,7 +1159,7 @@ export default function SmartAssistant() {
                     rows={1}
                     className={`w-full h-11 md:h-12 max-h-24 px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 text-sm font-medium transition-colors resize-none overflow-hidden leading-tight ${
                       isDark
-                        ? "bg-neutral-800/10 border-neutral-700 text-white placeholder-neutral-400 focus:border-purple-600/50 focus:outline-none"
+                        ? "bg-neutral-800/10 border-neutral-700 text-white placeholder-neutral-400                       focus:border-purple-600/50 focus:outline-none"
                         : "bg-neutral-50 border-neutral-200 text-neutral-900 placeholder-neutral-500 focus:border-purple-500 focus:outline-none"
                     }`}
                     onInput={(e) => {
