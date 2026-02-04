@@ -449,6 +449,40 @@ export default function SmartAssistant() {
       return "¡Hola! Soy Natal-IA 😊 Puedo ayudarte con cronómetros, tareas, citas y correos. ¿Qué necesitas?"
     }
   }
+ // --- ELEVENLABS: síntesis de voz ---
+const speakWithElevenLabs = async (text) => {
+  try {
+    const resp = await fetch(
+      `${API_CONFIG.elevenlabs.baseUrl}/v1/text-to-speech/${API_CONFIG.elevenlabs.voiceId}`,
+      {
+        method: "POST",
+        headers: {
+          "accept": "audio/mpeg",
+          "content-type": "application/json",
+          "xi-api-key": API_CONFIG.elevenlabs.apiKey,
+        },
+        body: JSON.stringify({
+          text,
+          model_id: "eleven_multilingual_v2",
+          voice_settings: {
+            stability: 0.3,
+            similarity_boost: 0.75,
+            style: 0.5,
+            use_speaker_boost: true,
+          },
+        }),
+      }
+    )
+
+    if (!resp.ok) throw new Error(`ElevenLabs TTS error: ${resp.status}`)
+    const buf = await resp.arrayBuffer()
+    const url = URL.createObjectURL(new Blob([buf], { type: "audio/mpeg" }))
+    return url
+  } catch (e) {
+    console.error("ElevenLabs TTS error:", e)
+    return null
+  }
+}
 
   // Solicitar permisos de notificación al cargar
   useEffect(() => {
@@ -513,22 +547,37 @@ export default function SmartAssistant() {
       inputRef.current.style.height = "auto"
     }
 
-    try {
-      const aiResponse = await callPerplexityAPI(currentInput)
+   try {
+  const aiResponse = await callPerplexityAPI(currentInput)
 
-      const aiMessage = {
-        id: (Date.now() + 1).toString(),
-        content: aiResponse,
-        isUser: false,
-        timestamp: new Date(),
-        hasAudio: voiceMode,
-        audioUrl: null
-      }
+  // Genera el audio con ElevenLabs
+  const ttsUrl = await speakWithElevenLabs(aiResponse) // si quieres que solo hable con voiceMode:  voiceMode ? await speakWithElevenLabs(aiResponse) : null
 
-      setMessages((prev) => [...prev, aiMessage])
-      setCurrentConversationContext((prev) => [...prev, aiMessage])
+  const aiMessage = {
+    id: (Date.now() + 1).toString(),
+    content: aiResponse,
+    isUser: false,
+    timestamp: new Date(),
+    hasAudio: !!ttsUrl,
+    audioUrl: ttsUrl
+  }
 
-    } catch (error) {
+  setMessages((prev) => [...prev, aiMessage])
+  setCurrentConversationContext((prev) => [...prev, aiMessage])
+
+  // Reproduce el audio inmediatamente si existe
+  if (ttsUrl && audioRef.current) {
+  try {
+    if (audioRef.current.src) URL.revokeObjectURL(audioRef.current.src) // ← libera el anterior
+    audioRef.current.src = ttsUrl
+    await audioRef.current.play()
+    setCurrentPlayingId(aiMessage.id)
+    setIsPlaying(true)
+  } catch (err) { /* silencio */ }
+}
+
+} 
+ catch (error) {
       console.error("Error generando respuesta:", error)
       const errorMessage = {
         id: (Date.now() + 1).toString(),
